@@ -1,13 +1,26 @@
 import os 
 import random
-#The names function displays the names of the files.
-#To be able to change file path we need UI click and drag file path
 
 
 filepath = "C:/Users/firei/OneDrive/Documents/A Software/A music folder"
-fileNames = os.listdir(filepath)#use methods in OS to locate where this folder is
+if os.path.isdir(filepath):
+    fileNames = os.listdir(filepath) 
+    if len(fileNames) == 0: 
+        print("Folder empty \n")
+    else: 
+        print("Folder not empty \n")
+        print(fileNames)
+        #The shuffle function 
+        random.shuffle(fileNames)
+        print (fileNames)
+else:
+    print("File doesn't exist")
 
-# The shuffle function include the button to click
-print(fileNames)
-random.shuffle(fileNames)
-print (fileNames)
+
+""" To do list
+Need a click and drag file box UI to change the file path to the dragged
+file.
+Need button that says shuffle
+checked one condition
+
+"""

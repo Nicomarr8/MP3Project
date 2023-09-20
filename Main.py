@@ -11,7 +11,6 @@ if os.path.isdir(filepath):
         print(fileNames)
 else:
     print("File doesn't exist \n")
-   # print("Please enter a \n")
 
 
 """ To do list

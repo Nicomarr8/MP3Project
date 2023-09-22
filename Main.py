@@ -11,10 +11,3 @@ if os.path.isdir(filepath):
         print(fileNames)
 else:
     print("File doesn't exist \n")
-
-
-""" To do list
-Need a click and drag file box UI to change the file path to the dragged
-file.
-C:/Users/firei/OneDrive/Documents/A Software/A music folder
-"""

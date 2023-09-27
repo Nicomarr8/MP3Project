@@ -6,6 +6,9 @@ from pygame import mixer
 DEFAULT_SETTINGS = {
     "visual_theme": "default",
     "liked_songs": [],
+    "account_info": {
+        "username": None
+    },
     "audio_settings": {
         "volume": 50,
         "equalizer": {
@@ -18,7 +21,10 @@ DEFAULT_SETTINGS = {
         "notifications": True
     },
     "about_info": {
-        "INformation about the app"
+        "version": 0,
+        "developer": False,
+        "website": False,
+        # "Information about the app"
            }
 }
 
@@ -82,28 +88,30 @@ def change_settings(new_settings):
 # # Save the updated settings
 # save_settings(current_settings)
 
-def tagInfo(directory):
-  mp3 = eyed3.load(directory)
+# directory = "C:/Users/mteag/Music/4K YouTube to MP3/Carry On.mp3"
 
-  trackTitle = mp3.tag.title
-  trackArtist = mp3.tag.artist
-  trackAlbum = mp3.tag.album
-  trackRD = mp3.tag.getBestDate() 
+# def tagInfo(directory):
+#   mp3 = eyed3.load(directory)
 
-  if trackTitle == None: trackTitle = "Unknown"
-  if trackArtist == None: trackArtist = "Unknown"
-  if trackAlbum == None: trackAlbum = "Unknown"
-  if trackRD == None: trackRD = "Unknown"
+#   trackTitle = mp3.tag.title
+#   trackArtist = mp3.tag.artist
+#   trackAlbum = mp3.tag.album
+#   trackRD = mp3.tag.getBestDate() 
 
-  print("Title: ", trackTitle)
-  print("Artist: ", trackArtist)
-  print("Album: ", trackAlbum)
-  print("Release: ", trackRD)
+#   if trackTitle == None: trackTitle = "Unknown"
+#   if trackArtist == None: trackArtist = "Unknown"
+#   if trackAlbum == None: trackAlbum = "Unknown"
+#   if trackRD == None: trackRD = "Unknown"
 
-def playSong(directory):
-    mixer.init()
-    mixer.music.load(directory)
-    mixer.music.play()
+#   print("Title: ", trackTitle)
+#   print("Artist: ", trackArtist)
+#   print("Album: ", trackAlbum)
+#   print("Release: ", trackRD)
 
-#mixer.music.pause() - this is how to pause the music
-#mixer.music.unpause() - this is how to unpause the music
+# def playSong(directory):
+#     mixer.init()
+#     mixer.music.load(directory)
+#     mixer.music.play()
+
+# #mixer.music.pause() - this is how to pause the music
+# #mixer.music.unpause() - this is how to unpause the music

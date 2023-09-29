@@ -174,14 +174,14 @@ right_frame.grid_rowconfigure(0, weight=1)
 right_frame.grid_columnconfigure(0, weight=1)
 
 #images
-img_1=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/mp3.png")
+img_1=Image.open("MP3Project\\img\\mp3.png")
 img_1 = img_1.resize((130,130))
-img_1=ImageTk.PhotoImage(img_1)
+img_1= ImageTk.PhotoImage(img_1)
 app_image = Label(left_frame, height =130, image=img_1, padx=10, bg=co1)
-app_image.place(x=10,y=15)
+app_image.grid(row=0,column=0,sticky="nsew")
 
 #play button
-img_2=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/play.png")
+img_2=Image.open("MP3Project\\img\\play.png")
 img_2 = img_2.resize((30,30))
 img_2=ImageTk.PhotoImage(img_2)
 play_button = Button(down_frame, height =40,width = 40, image=img_2, padx=10, bg=co1)
@@ -189,14 +189,14 @@ play_button.grid(row=0,column=2, sticky="S")
 
 
 #prev button
-img_3=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/previous.png")
+img_3=Image.open("MP3Project\\img\\previous.png")
 img_3 = img_3.resize((30,30))
 img_3=ImageTk.PhotoImage(img_3)
 prev_button = Button(down_frame, height=40, width=40, image=img_3, padx=10, bg=co1)
 prev_button.grid(row=0,column=1, sticky="s")
 
 #next button
-img_4=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/next.png")
+img_4=Image.open("MP3Project\\img\\next.png")
 img_4 = img_4.resize((30,30))
 img_4=ImageTk.PhotoImage(img_4)
 next_button = Button(down_frame, height =40,width = 40, image=img_4, padx=10, bg=co1)
@@ -204,7 +204,7 @@ next_button.grid(row=0,column=3, sticky="s")
 
 
 #pause button
-img_5=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/pause.png")
+img_5=Image.open("MP3Project\\img\\pause.png")
 img_5 = img_5.resize((30,30))
 img_5=ImageTk.PhotoImage(img_5)
 pause_button = Button(down_frame, height =40,width = 40, image=img_5, padx=10, bg=co1)
@@ -212,7 +212,7 @@ pause_button.grid(row=0,column=4, sticky="s")
 
 
 #continue button
-img_6=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/continue.png")
+img_6=Image.open("MP3Project\\img\\continue.png")
 img_6 = img_6.resize((30,30))
 img_6=ImageTk.PhotoImage(img_6)
 continue_button = Button(down_frame, height =40,width = 40, image=img_6, padx=10, bg=co1)
@@ -220,7 +220,7 @@ continue_button.grid(row=0,column=5, sticky="s")
 
 
 #stop button
-img_7=Image.open("C:/Users/kibet/OneDrive/Desktop/Fall 2023/CS-250/Class Project/MP3 Project UI - Images (1)/stop.png")
+img_7=Image.open("MP3Project\\img\\stop.png")
 img_7 = img_7.resize((30,30))
 img_7=ImageTk.PhotoImage(img_7)
 stop_button = Button(down_frame, height =40,width = 40, image=img_7, padx=10, bg=co1)

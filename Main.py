@@ -1,18 +1,9 @@
-from msilib.schema import ListBox
-from textwrap import fill
-from tkinter import *
-from tkinter import ttk
-from turtle import down
+import tkinter
 from PIL import ImageTk, Image
 import json
 import eyed3
 from pygame import mixer
 import os 
-def configure_frames():
-    window.grid_rowconfigure(0, weight=1)  # Allow the top row (containing left and right frames) to expand vertically
-    window.grid_columnconfigure(0, weight=1)  # Allow the first column (containing left frame) to expand horizontally
-    window.grid_columnconfigure(1, weight=1)  # Allow the second column (containing right frame) to expand horizontally
-    window.grid_rowconfigure(1, weight=1)  # Allow the bottom row (containing down frame) to expand vertically
 
 def GetFilePath():
   filepath = input("Enter filepath")
@@ -135,103 +126,125 @@ def tagInfo(directory):
   print("Album: ", trackAlbum)
   print("Release: ", trackRD)
 
-co1 = 'white'
-co2 = "#3C1DC6"
-co3 = "#333333"
-co4= "#CFC7F8"
-
-window = Tk()
-window.title("")
-window.geometry('325x225')
-window.configure(background = co1)
-window.resizable(width = TRUE, height = TRUE)
-window.state('zoomed')
-
-
-
-#frames
-left_frame = Frame(window, width = 150, height = 150, bg = co1)
-left_frame.grid(row=0, column=0, padx=1, pady=1,sticky="nsew")
-right_frame = Frame(window, width = 250, height = 150, bg = co3)
-right_frame.grid(row=0, column=1, padx=0, sticky="nsew")
-down_frame = Frame(window, width = 400, height = 100, bg = co4)
-down_frame.grid(row=1, column=0,columnspan=3, padx=0, pady=1, sticky="nsew")
+class Window(tkinter.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("")
+        self.geometry('600x400')
+        self.configure(background = "white")
+        self.state('zoomed')
+        
+        #frames
+        self.left_frame = tkinter.Frame( width = 150, height = 150, bg = "white")
+        self.right_frame = tkinter.Frame( width = 250, height = 150, bg = "#333333")
+        self.down_frame = tkinter.Frame( width = 400, height = 100, bg = "#CFC7F8")
 
 
-# Creating a scrollbar
-my_scrollbar = Scrollbar(right_frame, orient=VERTICAL)
+        # Creating a scrollbar
+        self.my_scrollbar = tkinter.Scrollbar(self.right_frame, orient="vertical")
 
-# Creating a listbox
-listbox = Listbox(right_frame, yscrollcommand=my_scrollbar.set)
-listbox.grid(row=0, column=0, pady=10, padx=10, sticky="nsew")
+        # Creating a listbox
+        self.listbox = tkinter.Listbox(self.right_frame, yscrollcommand=self.my_scrollbar.set)
 
-# Configure scrollbar
-my_scrollbar.config(command=listbox.yview)
-my_scrollbar.grid(row=0, column=1, sticky="ns")
+        # Configure scrollbar
+        self.my_scrollbar.config(command=self.listbox.yview)
 
-# Configure grid for right_frame (parent container)
-right_frame.grid_rowconfigure(0, weight=1)
-right_frame.grid_columnconfigure(0, weight=1)
+        # Configure grid for right_frame (parent container)
 
-#images
-img_1=Image.open("img\\mp3.png")
-img_1 = img_1.resize((130,130))
-img_1= ImageTk.PhotoImage(img_1)
-app_image = Label(left_frame, height =130, image=img_1, padx=10, bg=co1)
-app_image.grid(row=0,column=0,sticky="nsew")
+        #images
+        self.img_1=Image.open("img\\mp3.png")
+        self.img_1 = self.img_1.resize((130,130))
+        self.img_1= ImageTk.PhotoImage(self.img_1)
+        self.app_image = tkinter.Label(self.left_frame, height =130, image=self.img_1, padx=10, bg="white")
 
-#play button
-img_2=Image.open("img\\play.png")
-img_2 = img_2.resize((30,30))
-img_2=ImageTk.PhotoImage(img_2)
-play_button = Button(down_frame, height =40,width = 40, image=img_2, padx=10, bg=co1)
-play_button.grid(row=0,column=2, sticky="S")
+        #play button
+        self.img_2=Image.open("img\\play.png")
+        self.img_2 = self.img_2.resize((30,30))
+        self.img_2=ImageTk.PhotoImage(self.img_2)
+        self.play_button = tkinter.Button(self.down_frame, height =40,width = 40, image=self.img_2, padx=10, bg="white")
 
 
-#prev button
-img_3=Image.open("img\\previous.png")
-img_3 = img_3.resize((30,30))
-img_3=ImageTk.PhotoImage(img_3)
-prev_button = Button(down_frame, height=40, width=40, image=img_3, padx=10, bg=co1)
-prev_button.grid(row=0,column=1, sticky="s")
+        #prev button
+        self.img_3=Image.open("img\\previous.png")
+        self.img_3 = self.img_3.resize((30,30))
+        self.img_3=ImageTk.PhotoImage(self.img_3)
+        self.prev_button = tkinter.Button(self.down_frame, height=40, width=40, image=self.img_3, padx=10, bg="white")
 
-#next button
-img_4=Image.open("img\\next.png")
-img_4 = img_4.resize((30,30))
-img_4=ImageTk.PhotoImage(img_4)
-next_button = Button(down_frame, height =40,width = 40, image=img_4, padx=10, bg=co1)
-next_button.grid(row=0,column=3, sticky="s")
+        #next button
+        self.img_4=Image.open("img\\next.png")
+        self.img_4 = self.img_4.resize((30,30))
+        self.img_4=ImageTk.PhotoImage(self.img_4)
+        self.next_button = tkinter.Button(self.down_frame, height =40,width = 40, image=self.img_4, padx=10, bg="white")
 
 
-#pause button
-img_5=Image.open("img\\pause.png")
-img_5 = img_5.resize((30,30))
-img_5=ImageTk.PhotoImage(img_5)
-pause_button = Button(down_frame, height =40,width = 40, image=img_5, padx=10, bg=co1)
-pause_button.grid(row=0,column=4, sticky="s")
+        #pause button
+        self.img_5=Image.open("img\\pause.png")
+        self.img_5 = self.img_5.resize((30,30))
+        self.img_5=ImageTk.PhotoImage(self.img_5)
+        self.pause_button = tkinter.Button(self.down_frame, height =40,width = 40, image=self.img_5, padx=10, bg="white")
 
 
-#continue button
-img_6=Image.open("img\\continue.png")
-img_6 = img_6.resize((30,30))
-img_6=ImageTk.PhotoImage(img_6)
-continue_button = Button(down_frame, height =40,width = 40, image=img_6, padx=10, bg=co1)
-continue_button.grid(row=0,column=5, sticky="s")
+        #continue button
+        self.img_6=Image.open("img\\continue.png")
+        self.img_6 = self.img_6.resize((30,30))
+        self.img_6=ImageTk.PhotoImage(self.img_6)
+        self.continue_button = tkinter.Button(self.down_frame, height =40,width = 40, image=self.img_6, padx=10, bg="white")
 
 
-#stop button
-img_7=Image.open("img\\stop.png")
-img_7 = img_7.resize((30,30))
-img_7=ImageTk.PhotoImage(img_7)
-stop_button = Button(down_frame, height =40,width = 40, image=img_7, padx=10, bg=co1)
-stop_button.grid(row=0,column=6, sticky="s")
+        #stop button
+        self.img_7=Image.open("img\\stop.png")
+        self.img_7 = self.img_7.resize((30,30))
+        self.img_7=ImageTk.PhotoImage(self.img_7)
+        self.stop_button = tkinter.Button(self.down_frame, height =40,width = 40, image=self.img_7, padx=10, bg="white")
 
-# seek bar
-seek= Scale(down_frame, from_=0, to =100, orient=HORIZONTAL)
-seek.grid (row=0, column=7)
+        # seek bar
+        self.seek= tkinter.Scale(self.down_frame, from_=0, to =100, orient="horizontal")
+
+        # Volume slider
+        self.volume= tkinter.Scale(self.down_frame, from_=0, to =100, orient="horizontal")
+
+        #refresh to put everythign in place
+        self.refresh()
+
+    def refresh(self):
+        #frames
+        self.left_frame.grid(row=0, column=0, padx=1, pady=1,sticky="nsew")
+        self.right_frame.grid(row=0, column=1, padx=0, sticky="nsew")
+        self.right_frame.grid_rowconfigure(0, weight=1)
+        self.right_frame.grid_columnconfigure(0, weight=1)
+        self.down_frame.grid(row=1, column=0,columnspan=3, padx=0, pady=1, sticky="nsew")
+        print(self.grid_size())
+
+        #listbox
+        self.listbox.grid(row=0, column=0, pady=10, padx=10, sticky="nsew")
+
+        #scrollbar
+        self.my_scrollbar.grid(row=0, column=1, sticky="ns")
+
+        #Images
+        self.app_image.grid(row=0,column=0,sticky="nsew")
+        self.play_button.grid(row=0,column=2, sticky="s")
+        self.prev_button.grid(row=0,column=1, sticky="s")
+        self.next_button.grid(row=0,column=3, sticky="s")
+        self.pause_button.grid(row=0,column=4, sticky="s")
+        self.continue_button.grid(row=0,column=5, sticky="s")
+        self.stop_button.grid(row=0,column=6, sticky="s")
+
+        #seek bar
+        self.seek.grid(row=0, column=7)
+
+        #volume slider
+        self.volume.grid(row=0, column=8)
 
 
-configure_frames()  # Call the configure_frames function to make the frames resizable
-window.mainloop()
+    def configure_frames(self):
+        self.grid_rowconfigure(0, weight=1)  # Allow the top row (containing left and right frames) to expand vertically
+        self.grid_columnconfigure(0, weight=1)  # Allow the first column (containing left frame) to expand horizontally
+        self.grid_columnconfigure(1, weight=1)  # Allow the second column (containing right frame) to expand horizontally
+        self.grid_rowconfigure(1, weight=1)  # Allow the bottom row (containing down frame) to expand vertically
+
+
+#configure_frames()  # Call the configure_frames function to make the frames resizable
+Window().mainloop()
 # #mixer.music.pause() - this is how to pause the music
 # #mixer.music.unpause() - this is how to unpause the music

@@ -1,4 +1,14 @@
+# todo
+# add a textbox for the song info above the seek bar
+# adjust seek bar to have a max length of the song's max length
+# give the pause/play buttons functionality
+# replace the default album icon with the albom cover for the song
+
+
 import tkinter
+from tkinter import ttk
+from functools import partial
+import PIL
 import json
 import eyed3
 from pygame import mixer
@@ -33,7 +43,7 @@ class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
         self.title("")
-        self.geometry('600x400')
+        self.geometry('900x600')
         self.configure(background = "white")
         #self.state('zoomed')
         self.buttonImages = {}
@@ -42,6 +52,7 @@ class Window(tkinter.Tk):
         self.frames = {}
         self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
         self.songs = []
+        self.idCounter = 0
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -86,20 +97,22 @@ class Window(tkinter.Tk):
 
         #frames
         self.frames["left"] = tkinter.Frame(bg = "white")
-        self.frames["right"] = tkinter.Frame(bg = "#333333")
+        self.frames["right"] = tkinter.Frame()
         self.frames["down"] = tkinter.Frame(bg = "#CFC7F8")
 
 
+        #stylize the scrollbar with witchcraft and wizardry
+        style=ttk.Style()
+        style.theme_use('classic')
+        style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
+
         # Creating a scro1lbar
-        self.songScrollbar = tkinter.Scrollbar(self.frames["right"], orient="vertical")
-
-        # Creating a listbox
-        self.listbox = tkinter.Listbox(self.frames["right"], yscrollcommand=self.songScrollbar.set)
-
-        # Configure scrollbar
-        self.songScrollbar.config(command=self.listbox.yview)
-
-        # Configure grid for right_frame (parent container)
+        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
+        self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
+        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
+        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
         #album default icon
         self.genAlbumIcon(2)
@@ -144,6 +157,7 @@ class Window(tkinter.Tk):
                 print("Folder empty \n")
             else: 
                 for i in fileNames:
+                    self.idCounter = 0
                     mp3 = eyed3.load(self.directory + "\\" + i)
                     print(mp3)
 
@@ -164,11 +178,20 @@ class Window(tkinter.Tk):
                         image_file.close()
                         trackImage = True
 
-                    self.songs.append({"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage})
+                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage})
+                    self.idCounter += 1
+                self.loadSongsIntoFrame()
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
 
+    def loadSongsIntoFrame(self):
+         for i in range(len(self.songs)):
+             tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
+
+    def queueSong(self,id):
+        for i in range(len(self.songs)):
+            pass
 
     # load settings from the JSON file
     def load_settings(self):
@@ -204,9 +227,9 @@ class Window(tkinter.Tk):
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
         self.frames["down"].grid(row=1, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
-
-        #listbox
-        self.listbox.grid(row=0, column=0, pady=10, padx=10, sticky="nsew")
+        self.songCanvas.grid(row=0,column=0,sticky="nsew")
+        self.songCanvas.grid_rowconfigure(0,weight=1)
+        self.songCanvas.grid_columnconfigure(0,weight=1)
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")

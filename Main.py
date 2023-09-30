@@ -40,6 +40,8 @@ class Window(tkinter.Tk):
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
+        self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
+        self.songs = []
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -88,7 +90,7 @@ class Window(tkinter.Tk):
         self.frames["down"] = tkinter.Frame(bg = "#CFC7F8")
 
 
-        # Creating a scrollbar
+        # Creating a scro1lbar
         self.songScrollbar = tkinter.Scrollbar(self.frames["right"], orient="vertical")
 
         # Creating a listbox
@@ -121,41 +123,52 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal")
 
         #refresh to put everythign in place
+
+
+        self.loadSongs()
+
         self.refresh()
 
+    #there should be a set directory button for the whole application
+
     # give this a button
-    def GetFilePath(self):
-        filepath = input("Enter filepath")
-        if os.path.isdir(filepath):
-            os.chdir(filepath)
-            fileNames = os.listdir(filepath) 
+    def loadSongs(self):
+        #filepath = input("Enter filepath")
+        if os.path.isdir(self.directory):
+            os.chdir(self.directory)
+            
+            fileNames = os.listdir(self.directory) 
 
             if len(fileNames) == 0: 
+                #needs error handling eventually
                 print("Folder empty \n")
             else: 
-                print("Folder not empty \n")
-                print(fileNames)
+                for i in fileNames:
+                    mp3 = eyed3.load(self.directory + "\\" + i)
+                    print(mp3)
+
+                    trackTitle = mp3.tag.title
+                    trackArtist = mp3.tag.artist
+                    trackAlbum = mp3.tag.album
+                    trackRD = mp3.tag.getBestDate() 
+                    trackImage = False
+
+                    if trackTitle == None: trackTitle = "Unknown"
+                    if trackArtist == None: trackArtist = "Unknown"
+                    if trackAlbum == None: trackAlbum = "Unknown"
+                    if trackRD == None: trackRD = "Unknown"
+
+                    for image in mp3.tag.images:
+                        image_file = open("..\\imgs\\{0} - {1}().jpg".format(trackTitle, trackArtist),"wb+")
+                        image_file.write(image.image_data)
+                        image_file.close()
+                        trackImage = True
+
+                    self.songs.append({"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage})
         else:
+            #needs error handling eventually
             print("File doesn't exist \n")
 
-    
-    def tagInfo(self,directory):
-        mp3 = eyed3.load(directory)
-
-        trackTitle = mp3.tag.title
-        trackArtist = mp3.tag.artist
-        trackAlbum = mp3.tag.album
-        trackRD = mp3.tag.getBestDate() 
-
-        if trackTitle == None: trackTitle = "Unknown"
-        if trackArtist == None: trackArtist = "Unknown"
-        if trackAlbum == None: trackAlbum = "Unknown"
-        if trackRD == None: trackRD = "Unknown"
-
-        print("Title: ", trackTitle)
-        print("Artist: ", trackArtist)
-        print("Album: ", trackAlbum)
-        print("Release: ", trackRD)
 
     # load settings from the JSON file
     def load_settings(self):

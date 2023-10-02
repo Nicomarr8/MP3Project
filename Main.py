@@ -1,17 +1,12 @@
 # todo
 # add a textbox for the song info above the seek bar
-# adjust seek bar to have a max length of the song's max length
-# give the pause/play buttons functionality
+# make the volume slider work
+# investigate the mixer channel stuff to see if it can do crossfade
 
-
-import tkinter
+import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
 from functools import partial
 from PIL import ImageTk,Image
-import json
-import eyed3
-import pygame
-import os 
 
 # def testChangeSettings():
 #   # Changing settings
@@ -52,6 +47,7 @@ class Window(tkinter.Tk):
         self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
         self.songs = []
         self.idCounter = 0
+        self.paused = False
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -129,7 +125,13 @@ class Window(tkinter.Tk):
         self.genNextButton(0.4)
 
         # seek bar
-        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal")
+        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal",command=self.seekTo)
+        self.songQueued = {"id":None,"Title":None,"Artist":None,"Album":None,"Release":None, "Image":None, "Directory":None,"Length":0}
+        self.mixer = pygame.mixer
+        self.mixer.init()
+        self.seekUpdater = self.updateSeek(self)
+        self.seekUpdater.start()
+        self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
 
         # Volume slider
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal")
@@ -138,7 +140,6 @@ class Window(tkinter.Tk):
 
 
         self.loadSongs()
-        pygame.mixer.init()
 
         self.refresh()
 
@@ -159,7 +160,6 @@ class Window(tkinter.Tk):
                 for i in fileNames:
                     self.idCounter = 0
                     mp3 = eyed3.load(self.directory + "\\" + i)
-                    print(mp3)
 
                     trackTitle = mp3.tag.title
                     trackArtist = mp3.tag.artist
@@ -178,7 +178,7 @@ class Window(tkinter.Tk):
                         image_file.close()
                         trackImage = True
 
-                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i})
+                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i,"Length":mp3.info.time_secs})
                     self.idCounter += 1
                 self.loadSongsIntoFrame()
         else:
@@ -190,19 +190,19 @@ class Window(tkinter.Tk):
              tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
 
     def queueSong(self,id):
-        self.songQueued = False
         for i in range(len(self.songs)):
             if self.songs[i]["id"] == id:
                 self.songQueued = self.songs[i]
         
-        if not self.songQueued == False:
+        if not self.songQueued["id"] == None:
             self.canvasAlbum.delete("all")
             self.canvasAlbum.grid_remove()
             self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
             self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
             self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
-            pygame.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
-            pygame.mixer.music.play()
+            self.seek.config(to=self.songQueued["Length"])
+            self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
+            self.mixer.music.play()
 
     # load settings from the JSON file
     def load_settings(self):
@@ -225,6 +225,20 @@ class Window(tkinter.Tk):
                 self.current_settings[key] = value
             else:
                 print(f"Invalid setting: {key}")
+    
+    class updateSeek(threading.Thread):
+        def __init__(self,parent):
+            super().__init__()
+            self.parent = parent
+            self._stop = threading.Event()
+            self.daemon = True
+
+        def run(self):
+            while not self._stop.is_set():
+                if not self.parent.seek.get() == self.parent.songQueued["Length"] and not self.parent.paused:
+                    self.parent.seek.set(self.parent.seek.get() + 1)
+                time.sleep(1)
+            return
 
     def refresh(self):
         for i in range(len(self.frames)):
@@ -251,6 +265,10 @@ class Window(tkinter.Tk):
         self.songCanvas.grid(row=0,column=0,sticky="nsew")
         self.songCanvas.grid_rowconfigure(0,weight=1)
         self.songCanvas.grid_columnconfigure(0,weight=1)
+        for i in range(7):
+            self.frames["down"].grid_columnconfigure(i, weight=1)
+        self.frames["down"].grid_rowconfigure(0, weight=1)
+        self.frames["down"].grid_rowconfigure(1, weight=1)
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")
@@ -259,10 +277,11 @@ class Window(tkinter.Tk):
         self.refreshCanvases()
 
         #seek bar
-        self.seek.grid(row=0, column=0,columnspan=7,sticky="nsew")
+        self.seek.grid(row=0, column=0,columnspan=4,sticky="nsew")
+        
 
         #volume slider
-        self.volume.grid(row=0, column=7,columnspan=3,sticky="nsew")
+        self.volume.grid(row=0, column=4,columnspan=3,sticky="nsew")
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -360,10 +379,26 @@ class Window(tkinter.Tk):
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 
     def play(self):
-        pygame.mixer.music.unpause()
+        self.mixer.music.unpause()
+        self.paused = False
 
     def pause(self):
-        pygame.mixer.music.pause()
+        self.mixer.music.pause()
+        self.paused = True
+
+    def seekTo(self,event):
+        if not self.mixer.music.get_busy() and not self.paused:
+            print(1)
+            self.mixer.music.play()
+            self.mixer.music.set_pos(self.seek.get())
+        else:
+            self.mixer.music.set_pos(self.seek.get())
+
+
+    def tidyDestroy(self):
+        self.seekUpdater._stop.set
+        time.sleep(1)
+        self.destroy()
 
 #configure_frames()  # Call the configure_frames function to make the frames resizable
 Window().mainloop()

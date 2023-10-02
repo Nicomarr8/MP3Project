@@ -2,16 +2,15 @@
 # add a textbox for the song info above the seek bar
 # adjust seek bar to have a max length of the song's max length
 # give the pause/play buttons functionality
-# replace the default album icon with the albom cover for the song
 
 
 import tkinter
 from tkinter import ttk
 from functools import partial
-import PIL
+from PIL import ImageTk,Image
 import json
 import eyed3
-from pygame import mixer
+import pygame
 import os 
 
 # def testChangeSettings():
@@ -43,7 +42,7 @@ class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
         self.title("")
-        self.geometry('900x600')
+        self.geometry('1450x800')
         self.configure(background = "white")
         #self.state('zoomed')
         self.buttonImages = {}
@@ -96,9 +95,9 @@ class Window(tkinter.Tk):
         self.website = self.current_settings["about_info"]["website"]
 
         #frames
-        self.frames["left"] = tkinter.Frame(bg = "white")
-        self.frames["right"] = tkinter.Frame()
-        self.frames["down"] = tkinter.Frame(bg = "#CFC7F8")
+        self.frames["left"] = tkinter.Frame(self,bg = "white")
+        self.frames["right"] = tkinter.Frame(self)
+        self.frames["down"] = tkinter.Frame(self,bg = "#CFC7F8")
 
 
         #stylize the scrollbar with witchcraft and wizardry
@@ -139,6 +138,7 @@ class Window(tkinter.Tk):
 
 
         self.loadSongs()
+        pygame.mixer.init()
 
         self.refresh()
 
@@ -173,12 +173,12 @@ class Window(tkinter.Tk):
                     if trackRD == None: trackRD = "Unknown"
 
                     for image in mp3.tag.images:
-                        image_file = open("..\\imgs\\{0} - {1}().jpg".format(trackTitle, trackArtist),"wb+")
+                        image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
                         image_file.write(image.image_data)
                         image_file.close()
                         trackImage = True
 
-                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage})
+                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i})
                     self.idCounter += 1
                 self.loadSongsIntoFrame()
         else:
@@ -190,8 +190,19 @@ class Window(tkinter.Tk):
              tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
 
     def queueSong(self,id):
+        self.songQueued = False
         for i in range(len(self.songs)):
-            pass
+            if self.songs[i]["id"] == id:
+                self.songQueued = self.songs[i]
+        
+        if not self.songQueued == False:
+            self.canvasAlbum.delete("all")
+            self.canvasAlbum.grid_remove()
+            self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+            self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
+            self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            pygame.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
+            pygame.mixer.music.play()
 
     # load settings from the JSON file
     def load_settings(self):
@@ -220,13 +231,23 @@ class Window(tkinter.Tk):
             self.frames[list(self.frames)[i]].grid_remove()
 
         #frames
-        self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew")
+        self.rowconfigure(0,weight=1)
+        self.rowconfigure(1,weight=1)
+        self.rowconfigure(2,weight=1)
+        self.rowconfigure(3,weight=1)
+        self.rowconfigure(4,weight=1)
+        self.rowconfigure(5,weight=1)
+        self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew",rowspan=5)
         self.frames["left"].grid_rowconfigure(0, weight=1)
         self.frames["left"].grid_columnconfigure(0, weight=1)
-        self.frames["right"].grid(row=0, column=1, padx=0, sticky="nsew")
+        self.frames["left"].grid_rowconfigure(1, weight=1)
+        self.frames["left"].grid_columnconfigure(1, weight=1)
+        self.frames["left"].grid_rowconfigure(2, weight=1)
+        self.frames["left"].grid_columnconfigure(2, weight=1)
+        self.frames["right"].grid(row=0, column=1, padx=0, sticky="nsew",rowspan=5)
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
-        self.frames["down"].grid(row=1, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
+        self.frames["down"].grid(row=5, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
         self.songCanvas.grid(row=0,column=0,sticky="nsew")
         self.songCanvas.grid_rowconfigure(0,weight=1)
         self.songCanvas.grid_columnconfigure(0,weight=1)
@@ -255,7 +276,7 @@ class Window(tkinter.Tk):
         for i in range(len(self.canvases)):
             self.canvases[list(self.canvases)[i]].grid_remove()
         
-        self.canvasAlbum.grid(row=0,column=0)
+        self.canvasAlbum.grid(row=1,column=1)
         for i in range(len(self.canvases)):
             self.canvases[list(self.canvases)[i]].grid(row=1,column=i,pady=2)
 
@@ -277,6 +298,7 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
             event.widget.create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
+            self.play()
         self.canvases["play"].bind("<ButtonRelease-1>",onRelease)
 
     def genPauseButton(self,factor):
@@ -294,6 +316,7 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
             event.widget.create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
+            self.pause()
         self.canvases["pause"].bind("<ButtonRelease-1>",onRelease)
 
     def genNextButton(self,factor):
@@ -336,7 +359,11 @@ class Window(tkinter.Tk):
         self.canvasAlbum.create_oval(35*factor,20*factor,65*factor,50*factor,outline="black",fill="white",width=2)
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 
+    def play(self):
+        pygame.mixer.music.unpause()
 
+    def pause(self):
+        pygame.mixer.music.pause()
 
 #configure_frames()  # Call the configure_frames function to make the frames resizable
 Window().mainloop()

@@ -1,6 +1,5 @@
 # todo
 # add a textbox for the song info above the seek bar
-# make the volume slider work
 # investigate the mixer channel stuff to see if it can do crossfade
 
 import time, tkinter, json, eyed3, pygame, os, threading
@@ -95,7 +94,6 @@ class Window(tkinter.Tk):
         self.frames["right"] = tkinter.Frame(self)
         self.frames["down"] = tkinter.Frame(self,bg = "#CFC7F8")
 
-
         #stylize the scrollbar with witchcraft and wizardry
         style=ttk.Style()
         style.theme_use('classic')
@@ -134,7 +132,8 @@ class Window(tkinter.Tk):
         self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
 
         # Volume slider
-        self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal")
+        self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume)
+        self.volume.set(100)
 
         #refresh to put everythign in place
 
@@ -148,9 +147,18 @@ class Window(tkinter.Tk):
     # give this a button
     def loadSongs(self):
         #filepath = input("Enter filepath")
+
         if os.path.isdir(self.directory):
             os.chdir(self.directory)
-            
+
+            #this resets the imgs folder so that it's a fresh start
+            if os.path.exists("..\\imgs"): 
+                os.chdir("..\\imgs")
+                for i in os.listdir():
+                    os.remove(str(os.getcwd()) + "\\" + str(i))
+                    
+                os.chdir(self.directory)
+
             fileNames = os.listdir(self.directory) 
 
             if len(fileNames) == 0: 
@@ -158,7 +166,6 @@ class Window(tkinter.Tk):
                 print("Folder empty \n")
             else: 
                 for i in fileNames:
-                    self.idCounter = 0
                     mp3 = eyed3.load(self.directory + "\\" + i)
 
                     trackTitle = mp3.tag.title
@@ -172,6 +179,7 @@ class Window(tkinter.Tk):
                     if trackAlbum == None: trackAlbum = "Unknown"
                     if trackRD == None: trackRD = "Unknown"
 
+                    #this generates the imgs from the mp3s
                     for image in mp3.tag.images:
                         image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
                         image_file.write(image.image_data)
@@ -185,22 +193,30 @@ class Window(tkinter.Tk):
             #needs error handling eventually
             print("File doesn't exist \n")
 
+    #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
          for i in range(len(self.songs)):
              tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
 
+    #queues and plays the selected song
     def queueSong(self,id):
         for i in range(len(self.songs)):
             if self.songs[i]["id"] == id:
                 self.songQueued = self.songs[i]
         
+        #verifies the song exists and was loaded
         if not self.songQueued["id"] == None:
+            #resets and fills the left frame's canvas with the album cover
             self.canvasAlbum.delete("all")
             self.canvasAlbum.grid_remove()
             self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
             self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
             self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            #gives the seek abr the right length
             self.seek.config(to=self.songQueued["Length"])
+            #sets the seek bar back to 0
+            self.seek.set(0)
+            #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
 
@@ -226,6 +242,7 @@ class Window(tkinter.Tk):
             else:
                 print(f"Invalid setting: {key}")
     
+    #a thread to update the seek bar every second
     class updateSeek(threading.Thread):
         def __init__(self,parent):
             super().__init__()
@@ -240,6 +257,7 @@ class Window(tkinter.Tk):
                 time.sleep(1)
             return
 
+    # a fresh function for all of the elements on the page (tkinter thing)
     def refresh(self):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
@@ -290,6 +308,7 @@ class Window(tkinter.Tk):
         for i in range(self.grid_size()[1]):
             self.grid_rowconfigure(i,weight=1)
 
+    # a refresh for only the canvases (buttons and album cover)
     def refreshCanvases(self):
         self.canvasAlbum.grid_remove()
         for i in range(len(self.canvases)):
@@ -304,14 +323,14 @@ class Window(tkinter.Tk):
         self.canvases["play"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
         self.canvases["play"].create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
         self.canvases["play"].create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
-        #the function for clicking on the play button (just animation right now)
+        #the function for clicking on the play button
         def onClick(event):
             event.widget.configure(relief="sunken")
             event.widget.delete("all")
             event.widget.create_oval(10*factor+2,10*factor+2,97*factor+2,97*factor+2, outline="black", fill="white", width=2)
             event.widget.create_polygon([40*factor+2,25*factor+2,80*factor+2,50*factor+2,40*factor+2,80*factor+2],outline="black",fill="white",width=2)
         self.canvases["play"].bind("<ButtonPress-1>",onClick)
-        #the function for releasing the play button (just animation right now)
+        #the function for releasing the play button (actually plays)
         def onRelease(event):
             event.widget.configure(relief="raised")
             event.widget.delete("all")
@@ -320,16 +339,19 @@ class Window(tkinter.Tk):
             self.play()
         self.canvases["play"].bind("<ButtonRelease-1>",onRelease)
 
+    #generates the pause button image
     def genPauseButton(self,factor):
         self.canvases["pause"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
         self.canvases["pause"].create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
         self.canvases["pause"].create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
+        # function for pressing the pause button
         def onClick(event):
             event.widget.configure(relief="sunken")
             event.widget.delete("all")
             event.widget.create_rectangle(23*factor+2,10*factor+2,43*factor+2,95*factor+2, outline="black", fill="white", width=2)
             event.widget.create_rectangle(65*factor+2,10*factor+2,85*factor+2,95*factor+2, outline="black", fill="white", width=2)
         self.canvases["pause"].bind("<ButtonPress-1>",onClick)
+        #function for releasing the pause button (actually pauses)
         def onRelease(event):
             event.widget.configure(relief="raised")
             event.widget.delete("all")
@@ -338,69 +360,92 @@ class Window(tkinter.Tk):
             self.pause()
         self.canvases["pause"].bind("<ButtonRelease-1>",onRelease)
 
+    #generates the next button
     def genNextButton(self,factor):
         self.canvases["next"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
         self.canvases["next"].create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
         self.canvases["next"].create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
+        #function for clicking the next button
         def onClick(event):
             event.widget.configure(relief="sunken")
             event.widget.delete("all")
             event.widget.create_polygon([20*factor+2,25*factor+2,60*factor+2,50*factor+2,20*factor+2,80*factor+2],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor+2,25*factor+2,85*factor+2,80*factor+2,outline="black",fill="white",width=2)
         self.canvases["next"].bind("<ButtonPress-1>",onClick)
+        #function for releasing the next button (actually moves to the next song)
         def onRelease(event):
             event.widget.configure(relief="raised")
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
+            self.moveSong(1)
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 
+    #generates the previous button
     def genPrevButton(self,factor):
         self.canvases["prev"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
         self.canvases["prev"].create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
         self.canvases["prev"].create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
         self.canvases["prev"].grid(row=0,column=0)
+        #function for pressing the previous button
         def onClick(event):
             event.widget.configure(relief="sunken")
             event.widget.delete("all")
             event.widget.create_polygon([85*factor+2,25*factor+2,45*factor+2,50*factor+2,85*factor+2,80*factor+2],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor+2,25*factor+2,30*factor+2,80*factor+2,outline="black",fill="white",width=2)
         self.canvases["prev"].bind("<ButtonPress-1>",onClick)
+        #function for releasing the previous button (actually moves to the previous song)
         def onRelease(event):
             event.widget.configure(relief="raised")
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
+            self.moveSong(-1)
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
+    #generates the default album icon for a placeholder on startup
     def genAlbumIcon(self,factor):
         self.canvasAlbum = tkinter.Canvas(self.frames["left"],width=100*factor,height=100*factor,background="grey")
         self.canvasAlbum.create_oval(35*factor,20*factor,65*factor,50*factor,outline="black",fill="white",width=2)
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 
+    #play function
     def play(self):
         self.mixer.music.unpause()
         self.paused = False
 
+    #pause function
     def pause(self):
         self.mixer.music.pause()
         self.paused = True
 
+    #seeking function to move the song to reflect the time shown on the seek bar
     def seekTo(self,event):
+        #logic to handle if it's paused or not nad if it's playing or not
         if not self.mixer.music.get_busy() and not self.paused:
-            print(1)
             self.mixer.music.play()
             self.mixer.music.set_pos(self.seek.get())
         else:
             self.mixer.music.set_pos(self.seek.get())
 
+    #the volume setting function for the volume slider
+    def setVolume(self,event):
+        self.mixer.music.set_volume(self.volume.get()/100)
 
+    #the is run on the X being clicked so that the threads are properly shut down with the window
     def tidyDestroy(self):
         self.seekUpdater._stop.set
         time.sleep(1)
         self.destroy()
 
-#configure_frames()  # Call the configure_frames function to make the frames resizable
+    #this is the function for the next and previous buttons
+    def moveSong(self,direction):
+        if -1 < self.songQueued["id"] + direction < len(self.songs):
+            self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
+        elif self.songQueued["id"] + direction <= -1:
+            self.queueSong(self.songs[len(self.songs)-1]["id"])
+        elif self.songQueued["id"] + direction > len(self.songs)-1:
+            self.queueSong(self.songs[0]["id"])
+
+# this runs the whole file
 Window().mainloop()
-# #mixer.music.pause() - this is how to pause the music
-# #mixer.music.unpause() - this is how to unpause the music

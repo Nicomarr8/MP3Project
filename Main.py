@@ -216,6 +216,7 @@ class Window(tkinter.Tk):
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
             self.seek.set(0)
+            self.seek.config(label="Progress: 00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
@@ -255,6 +256,7 @@ class Window(tkinter.Tk):
                 if not self.parent.seek.get() == self.parent.songQueued["Length"] and not self.parent.paused:
                     self.parent.seek.set(self.parent.seek.get() + 1)
                     self.parent.seek.config(label=f"Progress: {int(self.parent.seek.get() / 60)}:{int((float(self.parent.seek.get() / 60) - int(self.parent.seek.get() / 60)) * 60 )}")
+                    time.sleep(1)
             return
 
     # a fresh function for all of the elements on the page (tkinter thing)

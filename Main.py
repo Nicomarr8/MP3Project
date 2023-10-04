@@ -123,16 +123,16 @@ class Window(tkinter.Tk):
         self.genNextButton(0.4)
 
         # seek bar
-        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal",command=self.seekTo)
+        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal",command=self.seekTo, label="Progress: 00:00", showvalue=0)
         self.songQueued = {"id":None,"Title":None,"Artist":None,"Album":None,"Release":None, "Image":None, "Directory":None,"Length":0}
         self.mixer = pygame.mixer
-        self.mixer.init()
         self.seekUpdater = self.updateSeek(self)
         self.seekUpdater.start()
         self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
+        self.mixer.init()    
 
         # Volume slider
-        self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume)
+        self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(100)
 
         #refresh to put everythign in place
@@ -254,7 +254,7 @@ class Window(tkinter.Tk):
             while not self._stop.is_set():
                 if not self.parent.seek.get() == self.parent.songQueued["Length"] and not self.parent.paused:
                     self.parent.seek.set(self.parent.seek.get() + 1)
-                time.sleep(1)
+                    self.parent.seek.config(label=f"Progress: {int(self.parent.seek.get() / 60)}:{int((float(self.parent.seek.get() / 60) - int(self.parent.seek.get() / 60)) * 60 )}")
             return
 
     # a fresh function for all of the elements on the page (tkinter thing)
@@ -297,7 +297,6 @@ class Window(tkinter.Tk):
         #seek bar
         self.seek.grid(row=0, column=0,columnspan=4,sticky="nsew")
         
-
         #volume slider
         self.volume.grid(row=0, column=4,columnspan=3,sticky="nsew")
 

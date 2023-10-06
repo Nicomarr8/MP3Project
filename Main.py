@@ -149,12 +149,12 @@ class Window(tkinter.Tk):
             os.chdir(self.directory)
 
             #this resets the imgs folder so that it's a fresh start
-            if os.path.exists("..\\imgs"): 
-                os.chdir("..\\imgs")
-                for i in os.listdir():
-                    os.remove(str(os.getcwd()) + "\\" + str(i))
-                    
-                os.chdir(self.directory)
+            if not os.path.exists("..\\imgs"): os.mkdir("..\\imgs")
+            os.chdir("..\\imgs")
+            for i in os.listdir():
+                os.remove(str(os.getcwd()) + "\\" + str(i))
+                
+            os.chdir(self.directory)
 
             fileNames = os.listdir(self.directory) 
 

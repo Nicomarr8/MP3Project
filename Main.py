@@ -2,6 +2,8 @@
 # add a textbox for the song info above the seek bar
 # investigate the mixer channel stuff to see if it can do crossfade
 # click on seek to move it to that position
+# optimization?
+# finding its own directory
 
 import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
@@ -31,15 +33,12 @@ from PIL import ImageTk,Image
   # Save the updated settings
   #save_settings(current_settings)
 
-# directory = "C:/Users/mteag/Music/4K YouTube to MP3/Carry On.mp3"
-
 class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
         self.title("")
         self.geometry('1450x800')
         self.configure(background = "white")
-        #self.state('zoomed')
         self.buttonImages = {}
         self.buttons = {}
         self.canvases = {}
@@ -132,9 +131,9 @@ class Window(tkinter.Tk):
 
         # Volume slider
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
-        self.volume.set(100)
+        self.volume.set(50)
 
-        #refresh to put everythign in place
+        #refresh to put everything in place
 
         self.refresh()
         self.loadSongs()
@@ -217,7 +216,8 @@ class Window(tkinter.Tk):
             self.seek.config(label="Progress: 00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
-            if not self.paused: self.mixer.music.play()
+            self.mixer.music.play()
+            if self.paused: self.pause()
 
     # load settings from the JSON file
     def load_settings(self):

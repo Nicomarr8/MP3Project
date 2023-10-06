@@ -1,6 +1,8 @@
 # todo
 # add a textbox for the song info above the seek bar
 # investigate the mixer channel stuff to see if it can do crossfade
+# load first song in queue
+# click on seek to move it to that position
 
 import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
@@ -114,16 +116,14 @@ class Window(tkinter.Tk):
         self.genPrevButton(0.4)
 
         #play button
-        self.genPlayButton(0.4)
-
-        #pause button
-        self.genPauseButton(0.4)
+        self.genPausePlayButton(0.4)
 
         #next button
         self.genNextButton(0.4)
 
         # seek bar
-        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal",command=self.seekTo, label="Progress: 00:00", showvalue=0)
+        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="Progress: 00:00", showvalue=0, command=self.moveSeek)
+        self.seek.bind("<ButtonRelease-1>",self.seekTo)
         self.songQueued = {"id":None,"Title":None,"Artist":None,"Album":None,"Release":None, "Image":None, "Directory":None,"Length":0}
         self.mixer = pygame.mixer
         self.seekUpdater = self.updateSeek(self)
@@ -219,7 +219,7 @@ class Window(tkinter.Tk):
             self.seek.config(label="Progress: 00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
-            self.mixer.music.play()
+            if not self.paused: self.mixer.music.play()
 
     # load settings from the JSON file
     def load_settings(self):
@@ -255,7 +255,6 @@ class Window(tkinter.Tk):
             while not self._stop.is_set():
                 if not self.parent.seek.get() == self.parent.songQueued["Length"] and not self.parent.paused:
                     self.parent.seek.set(self.parent.seek.get() + 1)
-                    self.parent.seek.config(label=f"Progress: {int(self.parent.seek.get() / 60)}:{int((float(self.parent.seek.get() / 60) - int(self.parent.seek.get() / 60)) * 60 )}")
                     time.sleep(1)
             return
 
@@ -319,47 +318,35 @@ class Window(tkinter.Tk):
         for i in range(len(self.canvases)):
             self.canvases[list(self.canvases)[i]].grid(row=1,column=i,pady=2)
 
-    #generates the play button image
-    def genPlayButton(self,factor):
+    #generates the play/pause button image
+    def genPausePlayButton(self,factor):
         self.canvases["play"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
-        self.canvases["play"].create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
-        self.canvases["play"].create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
+        self.canvases["play"].create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
+        self.canvases["play"].create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
         #the function for clicking on the play button
         def onClick(event):
             event.widget.configure(relief="sunken")
             event.widget.delete("all")
-            event.widget.create_oval(10*factor+2,10*factor+2,97*factor+2,97*factor+2, outline="black", fill="white", width=2)
-            event.widget.create_polygon([40*factor+2,25*factor+2,80*factor+2,50*factor+2,40*factor+2,80*factor+2],outline="black",fill="white",width=2)
+            if self.paused:
+                event.widget.create_oval(10*factor+2,10*factor+2,97*factor+2,97*factor+2, outline="black", fill="white", width=2)
+                event.widget.create_polygon([40*factor+2,25*factor+2,80*factor+2,50*factor+2,40*factor+2,80*factor+2],outline="black",fill="white",width=2)
+            else:
+                event.widget.create_rectangle(23*factor+2,10*factor+2,43*factor+2,95*factor+2, outline="black", fill="white", width=2)
+                event.widget.create_rectangle(65*factor+2,10*factor+2,85*factor+2,95*factor+2, outline="black", fill="white", width=2)
         self.canvases["play"].bind("<ButtonPress-1>",onClick)
         #the function for releasing the play button (actually plays)
         def onRelease(event):
             event.widget.configure(relief="raised")
             event.widget.delete("all")
-            event.widget.create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
-            event.widget.create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
-            self.play()
+            if not self.paused:
+                event.widget.create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
+                event.widget.create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
+                self.pause()
+            else:
+                event.widget.create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
+                event.widget.create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
+                self.play()
         self.canvases["play"].bind("<ButtonRelease-1>",onRelease)
-
-    #generates the pause button image
-    def genPauseButton(self,factor):
-        self.canvases["pause"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
-        self.canvases["pause"].create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
-        self.canvases["pause"].create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
-        # function for pressing the pause button
-        def onClick(event):
-            event.widget.configure(relief="sunken")
-            event.widget.delete("all")
-            event.widget.create_rectangle(23*factor+2,10*factor+2,43*factor+2,95*factor+2, outline="black", fill="white", width=2)
-            event.widget.create_rectangle(65*factor+2,10*factor+2,85*factor+2,95*factor+2, outline="black", fill="white", width=2)
-        self.canvases["pause"].bind("<ButtonPress-1>",onClick)
-        #function for releasing the pause button (actually pauses)
-        def onRelease(event):
-            event.widget.configure(relief="raised")
-            event.widget.delete("all")
-            event.widget.create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
-            event.widget.create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
-            self.pause()
-        self.canvases["pause"].bind("<ButtonRelease-1>",onRelease)
 
     #generates the next button
     def genNextButton(self,factor):
@@ -423,6 +410,7 @@ class Window(tkinter.Tk):
     #seeking function to move the song to reflect the time shown on the seek bar
     def seekTo(self,event):
         #logic to handle if it's paused or not nad if it's playing or not
+        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if not self.mixer.music.get_busy() and not self.paused:
             self.mixer.music.play()
             self.mixer.music.set_pos(self.seek.get())
@@ -447,6 +435,11 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[len(self.songs)-1]["id"])
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
+
+    def moveSeek(self,event):
+        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
+        if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
+            self.moveSong(1)
 
 # this runs the whole file
 Window().mainloop()

@@ -1,7 +1,6 @@
 # todo
 # add a textbox for the song info above the seek bar
 # investigate the mixer channel stuff to see if it can do crossfade
-# load first song in queue
 # click on seek to move it to that position
 
 import time, tkinter, json, eyed3, pygame, os, threading
@@ -48,7 +47,7 @@ class Window(tkinter.Tk):
         self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
         self.songs = []
         self.idCounter = 0
-        self.paused = False
+        self.paused = True
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -137,10 +136,8 @@ class Window(tkinter.Tk):
 
         #refresh to put everythign in place
 
-
-        self.loadSongs()
-
         self.refresh()
+        self.loadSongs()
 
     #there should be a set directory button for the whole application
 
@@ -189,6 +186,7 @@ class Window(tkinter.Tk):
                     self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i,"Length":mp3.info.time_secs})
                     self.idCounter += 1
                 self.loadSongsIntoFrame()
+                self.queueSong(self.songs[0]["id"])
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
@@ -321,8 +319,8 @@ class Window(tkinter.Tk):
     #generates the play/pause button image
     def genPausePlayButton(self,factor):
         self.canvases["play"] = tkinter.Canvas(self.frames["down"],width=100*factor,height=100*factor,background="SystemButtonFace",borderwidth=2,relief="raised")
-        self.canvases["play"].create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
-        self.canvases["play"].create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
+        self.canvases["play"].create_oval(10*factor,10*factor,97*factor,97*factor, outline="black", fill="white", width=2)
+        self.canvases["play"].create_polygon([40*factor,25*factor,80*factor,50*factor,40*factor,80*factor],outline="black",fill="white",width=2)
         #the function for clicking on the play button
         def onClick(event):
             event.widget.configure(relief="sunken")

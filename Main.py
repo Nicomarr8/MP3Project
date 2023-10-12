@@ -7,6 +7,7 @@
 
 import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
+from tkinter import filedialog
 from functools import partial
 from PIL import ImageTk,Image
 
@@ -33,6 +34,15 @@ from PIL import ImageTk,Image
   # Save the updated settings
   #save_settings(current_settings)
 
+new_directory = "MP3_App"
+home_directory = os.path.expanduser ("~")
+music_directory = os.path.join(home_directory, "Music")
+
+music_directory_path = os.path.join(music_directory, new_directory)
+
+if not os.path.exists(music_directory_path): 
+    os.makedirs(music_directory_path)
+
 class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
@@ -43,7 +53,7 @@ class Window(tkinter.Tk):
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
-        self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
+        self.directory = music_directory_path
         self.songs = []
         self.idCounter = 0
         self.paused = True
@@ -133,7 +143,15 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
-        #refresh to put everything in place
+        # Currently not working, should allow the user to select a directory and automatically update the list in the application
+        def select_directory():
+            self.directory = filedialog.askdirectory()
+            self.refresh()
+            self.loadSongs()
+
+        # refresh to put everything in place
+        # directory_button = tkinter.Button(self, text = "Select Directory", command=select_directory)
+        # directory_button.pack()
 
         self.refresh()
         self.loadSongs()
@@ -152,7 +170,7 @@ class Window(tkinter.Tk):
             os.chdir("..\\imgs")
             for i in os.listdir():
                 os.remove(str(os.getcwd()) + "\\" + str(i))
-                
+
             os.chdir(self.directory)
 
             fileNames = os.listdir(self.directory) 

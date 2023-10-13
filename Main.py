@@ -55,6 +55,7 @@ class Window(tkinter.Tk):
         self.frames = {}
         self.directory = music_directory_path
         self.songs = []
+        self.songButtons = []
         self.idCounter = 0
         self.paused = True
         # default settings dictionary
@@ -145,14 +146,14 @@ class Window(tkinter.Tk):
 
         # Currently not working, should allow the user to select a directory and automatically update the list in the application
         def select_directory():
-            self.directory = filedialog.askdirectory()
-            self.refresh()
+            self.directory = filedialog.askdirectory() 
+            self.removeButtons()          
+            self.refresh() 
             self.loadSongs()
 
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="black", activebackground="grey", fg="white").grid(row=5, column=2)
+        
         # refresh to put everything in place
-        # directory_button = tkinter.Button(self, text = "Select Directory", command=select_directory)
-        # directory_button.pack()
-
         self.refresh()
         self.loadSongs()
 
@@ -160,10 +161,14 @@ class Window(tkinter.Tk):
 
     # give this a button
     def loadSongs(self):
+        self.songs = []
+        self.idCounter = 0
         #filepath = input("Enter filepath")
 
         if os.path.isdir(self.directory):
             os.chdir(self.directory)
+              
+            self.songs.clear()
 
             #this resets the imgs folder so that it's a fresh start
             if not os.path.exists("..\\imgs"): os.mkdir("..\\imgs")
@@ -201,17 +206,28 @@ class Window(tkinter.Tk):
                         trackImage = True
 
                     self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i,"Length":mp3.info.time_secs})
+                    # print(mp3.info.time_secs, end = " | ")
                     self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])
+                self.queueSong(self.songs[0]["id"])                
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
 
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
-         for i in range(len(self.songs)):
-             tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
+        for i in range(len(self.songs)):
+            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
+            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
+            songButton.grid(row=i, column=0)
+            self.songButtons.append(songButton)
+
+    def removeButtons(self):
+        self.songCanvas.delete("all")
+        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
+        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        # self.songButtons = []
+        # pass
 
     #queues and plays the selected song
     def queueSong(self,id):

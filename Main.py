@@ -48,7 +48,7 @@ class Window(tkinter.Tk):
         super().__init__()
         self.title("")
         self.geometry('1450x800')
-        self.configure(background = "white")
+        self.configure(background = "gray")
         self.buttonImages = {}
         self.buttons = {}
         self.canvases = {}
@@ -103,7 +103,7 @@ class Window(tkinter.Tk):
         #frames
         self.frames["left"] = tkinter.Frame(self,bg = "white")
         self.frames["right"] = tkinter.Frame(self)
-        self.frames["down"] = tkinter.Frame(self,bg = "#CFC7F8")
+        self.frames["down"] = tkinter.Frame(self,bg = "#7aa7f0")
 
         #stylize the scrollbar with witchcraft and wizardry
         style=ttk.Style()
@@ -123,7 +123,7 @@ class Window(tkinter.Tk):
         self.genNextButton(0.4)
 
         # seek bar
-        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="Progress: 00:00", showvalue=0, command=self.moveSeek)
+        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
         self.seek.bind("<ButtonRelease-1>",self.seekTo)
         self.songQueued = {"id":None,"Title":None,"Artist":None,"Album":None,"Release":None, "Image":None, "Directory":None,"Length":0}
         self.mixer = pygame.mixer
@@ -144,7 +144,7 @@ class Window(tkinter.Tk):
             self.loadSongs()
             self.songScrollbar.update()
 
-        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="grey", fg="Black").grid(row=5, column=0)
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
         # refresh to put everything in place
         self.refresh()
@@ -178,29 +178,42 @@ class Window(tkinter.Tk):
                 print("Folder empty \n")
             else: 
                 for i in fileNames:
-                    mp3 = eyed3.load(self.directory + "\\" + i)
+                    if i.lower().endswith(".mp3"):
+                        mp3 = eyed3.load(self.directory + "\\" + i)
 
-                    trackTitle = mp3.tag.title
-                    trackArtist = mp3.tag.artist
-                    trackAlbum = mp3.tag.album
-                    trackRD = mp3.tag.getBestDate() 
-                    trackImage = False
+                        if mp3:
+                            trackTitle = mp3.tag.title
+                            trackArtist = mp3.tag.artist
+                            trackAlbum = mp3.tag.album
+                            trackRD = mp3.tag.getBestDate()
+                            trackImage = False
+                        else:
+                            print("Error loading MP3")
 
-                    if trackTitle == None: trackTitle = "Unknown"
-                    if trackArtist == None: trackArtist = "Unknown"
-                    if trackAlbum == None: trackAlbum = "Unknown"
-                    if trackRD == None: trackRD = "Unknown"
+                        # if trackTitle == None: trackTitle = "Unknown"
+                        # if trackArtist == None: trackArtist = "Unknown"
+                        # if trackAlbum == None: trackAlbum = "Unknown"
+                        # if trackRD == None: trackRD = "Unknown"
 
-                    #this generates the imgs from the mp3s
-                    for image in mp3.tag.images:
-                        image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
-                        image_file.write(image.image_data)
-                        image_file.close()
-                        trackImage = True
+                        #this generates the imgs from the mp3s
+                        if mp3.tag.images:
+                            for image in mp3.tag.images:
+                                image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
+                                image_file.write(image.image_data)
+                                image_file.close()
+                                trackImage = True
+                        else:
+                            self.canvasAlbum.delete("all")
+                            self.canvasAlbum.grid_remove()
+                            self.canvasAlbum.grid(row=1,column=1)
+                            # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                            self.genAlbumIcon(2)
+                            trackImage = False
 
-                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i,"Length":mp3.info.time_secs})
-                    # print(mp3.info.time_secs, end = " | ")
-                    self.idCounter += 1
+                        #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
+                        self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
+                        # print(mp3.info.time_secs, end = " | ")
+                        self.idCounter += 1
                 self.loadSongsIntoFrame()
                 self.queueSong(self.songs[0]["id"])                
         else:
@@ -241,7 +254,7 @@ class Window(tkinter.Tk):
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
             self.seek.set(0)
-            self.seek.config(label="Progress: 00:00")
+            self.seek.config(label="00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
@@ -447,7 +460,7 @@ class Window(tkinter.Tk):
     #seeking function to move the song to reflect the time shown on the seek bar
     def seekTo(self,event):
         #logic to handle if it's paused or not nad if it's playing or not
-        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
+        self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if not self.mixer.music.get_busy() and not self.paused:
             self.mixer.music.play()
             self.mixer.music.set_pos(self.seek.get())
@@ -474,7 +487,7 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[0]["id"])
 
     def moveSeek(self,event):
-        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
+        self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
 

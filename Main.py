@@ -136,7 +136,7 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
-        # Currently not working, should allow the user to select a directory and automatically update the list in the application
+        # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
             self.removeButtons()          

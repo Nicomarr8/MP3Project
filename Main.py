@@ -110,14 +110,6 @@ class Window(tkinter.Tk):
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
 
-        # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
-
         #album default icon
         self.genAlbumIcon(2)
 
@@ -150,8 +142,9 @@ class Window(tkinter.Tk):
             self.removeButtons()          
             self.refresh() 
             self.loadSongs()
+            self.songScrollbar.update()
 
-        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="black", activebackground="grey", fg="white").grid(row=5, column=2)
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="grey", fg="Black").grid(row=5, column=0)
         
         # refresh to put everything in place
         self.refresh()
@@ -224,6 +217,7 @@ class Window(tkinter.Tk):
 
     def removeButtons(self):
         self.songCanvas.delete("all")
+        self.songScrollbar.destroy()
         self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
         # self.songButtons = []
@@ -261,6 +255,15 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
+    
+    def genScrollBar(self):
+        # Creating a scro1lbar
+        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
+        self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
+        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
+        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -294,6 +297,8 @@ class Window(tkinter.Tk):
     def refresh(self):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
+
+        self.genScrollBar()
 
         #frames
         self.rowconfigure(0,weight=1)

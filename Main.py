@@ -10,6 +10,11 @@ from tkinter import ttk
 from functools import partial
 from PIL import ImageTk,Image
 
+
+
+
+
+
 # def testChangeSettings():
 #   # Changing settings
 #   new_settings = {
@@ -43,7 +48,7 @@ class Window(tkinter.Tk):
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
-        self.directory = "C:\\Users\\nicor\\Nico's_Stuff\\NicoCode\\MP3Project\\music" # this is jsut for development, change this later
+        self.directory = "C:\\Users\\rajya\\OneDrive\\Desktop\\MP3 PROJECT SONGS" # this is jsut for development, change this later
         self.songs = []
         self.idCounter = 0
         self.paused = True
@@ -139,6 +144,39 @@ class Window(tkinter.Tk):
         self.loadSongs()
 
     #there should be a set directory button for the whole application
+# Search bar and search button
+        self.search_entry = tkinter.Entry(self.frames["down"], width=20)
+        self.search_entry.grid(row=0, column=7, padx=5)
+        self.search_button = tkinter.Button(self.frames["down"], text="Search", command=self.search_song)
+        self.search_button.grid(row=0, column=8, padx=5)
+
+        # Search results listbox
+        self.search_results = tkinter.Listbox(self.frames["down"], selectmode=tkinter.SINGLE, height=10)
+        self.search_results.grid(row=1, column=7, columnspan=2, padx=5)
+        self.search_results.bind("<<ListboxSelect>>", self.select_song)
+
+        # Update the search results
+        self.filtered_songs = []
+        self.update_search_results()
+
+    def search_song(self):
+        query = self.search_entry.get().strip().lower()
+        if query:
+            self.filtered_songs = [song for song in self.songs if query in song["Title"].lower()]
+        else:
+            self.filtered_songs = self.songs
+        self.update_search_results()
+
+    def update_search_results(self):
+        self.search_results.delete(0, tkinter.END)
+        for song in self.filtered_songs:
+            self.search_results.insert(tkinter.END, f"{song['Title']} - {song['Artist']}")
+
+    def select_song(self, event):
+        selected_index = self.search_results.curselection()
+        if selected_index:
+            selected_song = self.filtered_songs[int(selected_index[0])]
+            self.queueSong(selected_song["id"])
 
     # give this a button
     def loadSongs(self):

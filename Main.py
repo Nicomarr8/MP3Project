@@ -5,6 +5,7 @@
 # optimization?
 # finding its own directory
 
+
 import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
 from functools import partial
@@ -438,6 +439,49 @@ class Window(tkinter.Tk):
         self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
+
+       #Favorites
+            self.favorites=[]
+            self.load_favorites()
+            self.load_songs()
+            self.refresh ()
+
+           
+
+    def toggle_favorite(self, track_id):
+        if track_id in self.favorites:
+            self.favorites.remove(track_id)
+        else:
+            self.favorites.append(track_id)
+
+        # Update the "Favorites" playlist in the UI.
+        self.update_favorites_playlist()
+
+        # Save favorites to settings.
+        self.save_favorites()
+ 
+        
+    def update_favorites_playlist(self):
+    # Clear the current favorites playlist (if any).
+        self.frames["favorites"].destroy()
+
+        # Create a new frame for the "Favorites" playlist.
+        self.frames["favorites"] = tkinter.Frame(self, bg="white")
+        self.frames["favorites"].grid(row=0, column=1, padx=1, pady=1, sticky="nsew", rowspan=5)
+        self.frames["favorites"].grid_rowconfigure(0, weight=1)
+        self.frames["favorites"].grid_columnconfigure(0, weight=1)
+
+        # Add a label to the "Favorites" playlist.
+        tkinter.Label(self.frames["favorites"], text="Favorites Playlist", bg="white").grid(row=0, column=0, padx=5, pady=5)
+
+        # Add favorited tracks to the "Favorites" playlist.
+        for track in self.songs:
+            if track["id"] in self.favorites:
+                tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
+                            command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
+    
+
+   
 
 # this runs the whole file
 Window().mainloop()

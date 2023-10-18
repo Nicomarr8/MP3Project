@@ -471,7 +471,13 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
-            self.moveSong(-1)
+
+            if (self.seek.get() <= 5):
+                self.moveSong(-1)
+            else:
+                self.seek.set(0)
+                self.mixer.music.set_pos(self.seek.get())
+
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
     #generates the default album icon for a placeholder on startup
@@ -519,7 +525,7 @@ class Window(tkinter.Tk):
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
 
-    def moveSeek(self,event):
+    def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)

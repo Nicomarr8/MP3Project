@@ -7,13 +7,9 @@
 
 import time, tkinter, json, eyed3, pygame, os, threading
 from tkinter import ttk
+from tkinter import filedialog
 from functools import partial
 from PIL import ImageTk,Image
-
-
-
-
-
 
 # def testChangeSettings():
 #   # Changing settings
@@ -38,18 +34,28 @@ from PIL import ImageTk,Image
   # Save the updated settings
   #save_settings(current_settings)
 
+new_directory = "MP3_App"
+home_directory = os.path.expanduser ("~")
+music_directory = os.path.join(home_directory, "Music")
+
+music_directory_path = os.path.join(music_directory, new_directory)
+
+if not os.path.exists(music_directory_path): 
+    os.makedirs(music_directory_path)
+
 class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
         self.title("")
         self.geometry('1450x800')
-        self.configure(background = "white")
+        self.configure(background = "gray")
         self.buttonImages = {}
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
-        self.directory = "C:\\Users\\rajya\\OneDrive\\Desktop\\MP3 PROJECT SONGS" # this is jsut for development, change this later
+        self.directory = music_directory_path
         self.songs = []
+        self.songButtons = []
         self.idCounter = 0
         self.paused = True
         # default settings dictionary
@@ -97,20 +103,12 @@ class Window(tkinter.Tk):
         #frames
         self.frames["left"] = tkinter.Frame(self,bg = "white")
         self.frames["right"] = tkinter.Frame(self)
-        self.frames["down"] = tkinter.Frame(self,bg = "#CFC7F8")
+        self.frames["down"] = tkinter.Frame(self,bg = "#7aa7f0")
 
         #stylize the scrollbar with witchcraft and wizardry
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
-
-        # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
         #album default icon
         self.genAlbumIcon(2)
@@ -125,7 +123,7 @@ class Window(tkinter.Tk):
         self.genNextButton(0.4)
 
         # seek bar
-        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="Progress: 00:00", showvalue=0, command=self.moveSeek)
+        self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
         self.seek.bind("<ButtonRelease-1>",self.seekTo)
         self.songQueued = {"id":None,"Title":None,"Artist":None,"Album":None,"Release":None, "Image":None, "Directory":None,"Length":0}
         self.mixer = pygame.mixer
@@ -138,8 +136,17 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
-        #refresh to put everything in place
+        # Allows the user to select a directory and automatically update the list in the application
+        def select_directory():
+            self.directory = filedialog.askdirectory() 
+            self.removeButtons()          
+            self.refresh() 
+            self.loadSongs()
+            self.songScrollbar.update()
 
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
+        
+        # refresh to put everything in place
         self.refresh()
         self.loadSongs()
 
@@ -180,17 +187,21 @@ class Window(tkinter.Tk):
 
     # give this a button
     def loadSongs(self):
+        self.songs = []
+        self.idCounter = 0
         #filepath = input("Enter filepath")
 
         if os.path.isdir(self.directory):
             os.chdir(self.directory)
+              
+            self.songs.clear()
 
             #this resets the imgs folder so that it's a fresh start
             if not os.path.exists("..\\imgs"): os.mkdir("..\\imgs")
             os.chdir("..\\imgs")
             for i in os.listdir():
                 os.remove(str(os.getcwd()) + "\\" + str(i))
-                
+
             os.chdir(self.directory)
 
             fileNames = os.listdir(self.directory) 
@@ -200,38 +211,63 @@ class Window(tkinter.Tk):
                 print("Folder empty \n")
             else: 
                 for i in fileNames:
-                    mp3 = eyed3.load(self.directory + "\\" + i)
+                    if i.lower().endswith(".mp3"):
+                        mp3 = eyed3.load(self.directory + "\\" + i)
 
-                    trackTitle = mp3.tag.title
-                    trackArtist = mp3.tag.artist
-                    trackAlbum = mp3.tag.album
-                    trackRD = mp3.tag.getBestDate() 
-                    trackImage = False
+                        if mp3:
+                            trackTitle = mp3.tag.title
+                            trackArtist = mp3.tag.artist
+                            trackAlbum = mp3.tag.album
+                            trackRD = mp3.tag.getBestDate()
+                            trackImage = False
+                        else:
+                            print("Error loading MP3")
 
-                    if trackTitle == None: trackTitle = "Unknown"
-                    if trackArtist == None: trackArtist = "Unknown"
-                    if trackAlbum == None: trackAlbum = "Unknown"
-                    if trackRD == None: trackRD = "Unknown"
+                        # if trackTitle == None: trackTitle = "Unknown"
+                        # if trackArtist == None: trackArtist = "Unknown"
+                        # if trackAlbum == None: trackAlbum = "Unknown"
+                        # if trackRD == None: trackRD = "Unknown"
 
-                    #this generates the imgs from the mp3s
-                    for image in mp3.tag.images:
-                        image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
-                        image_file.write(image.image_data)
-                        image_file.close()
-                        trackImage = True
+                        #this generates the imgs from the mp3s
+                        if mp3.tag.images:
+                            for image in mp3.tag.images:
+                                image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
+                                image_file.write(image.image_data)
+                                image_file.close()
+                                trackImage = True
+                        else:
+                            self.canvasAlbum.delete("all")
+                            self.canvasAlbum.grid_remove()
+                            self.canvasAlbum.grid(row=1,column=1)
+                            # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                            self.genAlbumIcon(2)
+                            trackImage = False
 
-                    self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD, "Image":trackImage, "Directory":i,"Length":mp3.info.time_secs})
-                    self.idCounter += 1
+                        #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
+                        self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
+                        # print(mp3.info.time_secs, end = " | ")
+                        self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])
+                self.queueSong(self.songs[0]["id"])                
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
 
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
-         for i in range(len(self.songs)):
-             tkinter.Button(self.frames["innerRight"],text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong,self.songs[i]["id"]),bg="black", activebackground="grey", fg="white").grid(row=i,column=0)
+        for i in range(len(self.songs)):
+            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
+            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
+            songButton.grid(row=i, column=0)
+            self.songButtons.append(songButton)
+
+    def removeButtons(self):
+        self.songCanvas.delete("all")
+        self.songScrollbar.destroy()
+        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
+        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        # self.songButtons = []
+        # pass
 
     #queues and plays the selected song
     def queueSong(self,id):
@@ -251,7 +287,7 @@ class Window(tkinter.Tk):
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
             self.seek.set(0)
-            self.seek.config(label="Progress: 00:00")
+            self.seek.config(label="00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
@@ -265,6 +301,15 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
+    
+    def genScrollBar(self):
+        # Creating a scro1lbar
+        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
+        self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
+        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
+        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -298,6 +343,8 @@ class Window(tkinter.Tk):
     def refresh(self):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
+
+        self.genScrollBar()
 
         #frames
         self.rowconfigure(0,weight=1)
@@ -446,7 +493,7 @@ class Window(tkinter.Tk):
     #seeking function to move the song to reflect the time shown on the seek bar
     def seekTo(self,event):
         #logic to handle if it's paused or not nad if it's playing or not
-        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
+        self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if not self.mixer.music.get_busy() and not self.paused:
             self.mixer.music.play()
             self.mixer.music.set_pos(self.seek.get())
@@ -473,7 +520,7 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[0]["id"])
 
     def moveSeek(self,event):
-        self.seek.config(label=f"Progress: {int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
+        self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
 

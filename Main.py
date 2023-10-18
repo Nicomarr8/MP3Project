@@ -106,11 +106,6 @@ class Window(tkinter.Tk):
         self.frames["right"] = tkinter.Frame(self)
         self.frames["down"] = tkinter.Frame(self,bg = "#7aa7f0")
 
-        #stylize the scrollbar with witchcraft and wizardry
-        style=ttk.Style()
-        style.theme_use('classic')
-        style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
-
         #album default icon
         self.genAlbumIcon(2)
 
@@ -137,6 +132,11 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
+        #this is the stuff for in the right frame for the songs
+        self.scrollbar = tkinter.Scrollbar(self.frames["right"])
+        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.text.yview)
+
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
@@ -152,7 +152,7 @@ class Window(tkinter.Tk):
         self.loadSongs()
 
     #there should be a set directory button for the whole application
-# Search bar and search button
+    # Search bar and search button
         self.search_entry = tkinter.Entry(self.frames["down"], width=20)
         self.search_entry.grid(row=0, column=7, padx=5)
         self.search_button = tkinter.Button(self.frames["down"], text="Search", command=self.search_song)
@@ -257,16 +257,11 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
-            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-            songButton.grid(row=i, column=0)
-            self.songButtons.append(songButton)
+            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white"))
+            self.text.insert("end","\n")
 
     def removeButtons(self):
-        self.songCanvas.delete("all")
-        self.songScrollbar.destroy()
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        self.text.delete("1.0","end")
         # self.songButtons = []
         # pass
 
@@ -372,6 +367,12 @@ class Window(tkinter.Tk):
             self.frames["down"].grid_columnconfigure(i, weight=1)
         self.frames["down"].grid_rowconfigure(0, weight=1)
         self.frames["down"].grid_rowconfigure(1, weight=1)
+
+        self.frames["right"].columnconfigure(0,weight=1)
+        self.frames["right"].columnconfigure(1,weight=0)
+        self.frames["right"].rowconfigure(0,weight=1)
+        self.text.grid(row=0,column=0,sticky="nsew")
+        self.scrollbar.grid(row=0,column=1,sticky="nsew")
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")

@@ -123,6 +123,9 @@ class Window(tkinter.Tk):
         #next button
         self.genNextButton(0.4)
 
+        #Song Queue Listbox
+        self.createListbox(0.4)
+
         # seek bar
         self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
         self.seek.bind("<ButtonRelease-1>",self.seekTo)
@@ -292,6 +295,13 @@ class Window(tkinter.Tk):
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
+            #Clear the listbox
+            self.Queue_listbox.delete
+            #Add songs to the listbox
+            for song in self.songs:
+                self.Queue_listbox.insert(tkinter.END,f"{song['Title']}-{song['Artist']}")
+
+
             if self.paused: self.pause()
 
     # load settings from the JSON file
@@ -565,8 +575,15 @@ class Window(tkinter.Tk):
                 tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
                             command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
     
-
-   
+    def createListbox(self,factor):
+        self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
+        self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
+        self.Queue_listbox.insert(tkinter.END, "SongQueue")
+        self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
+        self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
+        self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
+        self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")
+ 
 
 # this runs the whole file
 Window().mainloop()

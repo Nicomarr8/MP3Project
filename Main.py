@@ -293,7 +293,7 @@ class Window(tkinter.Tk):
             #sets the seek bar back to 0
             self.seek.set(0)
             #displays information about the currently playing track
-            self.tagInfo.config(text=f"Title: {self.songQueued['Title']} | Artist: {self.songQueued['Artist']} | Album: {self.songQueued['Album']}")
+            self.tagInfo.config(text=f"{self.songQueued['Title']}   |   {self.songQueued['Artist']}   |   {self.songQueued['Album']}")
             self.seek.config(label="00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])

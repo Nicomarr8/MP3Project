@@ -137,6 +137,10 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
+        #tag information stuff
+        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14))
+        #refresh to put everything in place
+
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
@@ -288,6 +292,8 @@ class Window(tkinter.Tk):
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
             self.seek.set(0)
+            #displays information about the currently playing track
+            self.tagInfo.config(text=f"{self.songQueued['Title']}   |   {self.songQueued['Artist']}   |   {self.songQueued['Album']}")
             self.seek.config(label="00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
@@ -372,18 +378,22 @@ class Window(tkinter.Tk):
             self.frames["down"].grid_columnconfigure(i, weight=1)
         self.frames["down"].grid_rowconfigure(0, weight=1)
         self.frames["down"].grid_rowconfigure(1, weight=1)
+        self.frames["down"].grid_rowconfigure(2, weight=1)
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")
+
+        #tag info
+        self.tagInfo.grid(row=0,column=0,columnspan=7, sticky="nsew")
 
         #Images
         self.refreshCanvases()
 
         #seek bar
-        self.seek.grid(row=0, column=0,columnspan=4,sticky="nsew")
+        self.seek.grid(row=1, column=0,columnspan=4,sticky="nsew")
         
         #volume slider
-        self.volume.grid(row=0, column=4,columnspan=3,sticky="nsew")
+        self.volume.grid(row=1, column=4,columnspan=3,sticky="nsew")
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -400,7 +410,7 @@ class Window(tkinter.Tk):
         
         self.canvasAlbum.grid(row=1,column=1)
         for i in range(len(self.canvases)):
-            self.canvases[list(self.canvases)[i]].grid(row=1,column=i,pady=2)
+            self.canvases[list(self.canvases)[i]].grid(row=2,column=i,pady=2)
 
     #generates the play/pause button image
     def genPausePlayButton(self,factor):

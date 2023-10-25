@@ -486,8 +486,13 @@ class Window(tkinter.Tk):
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
            # num_items = self.Queue_listbox.size()
            # secondToLast_item = self.Queue_listbox.get(num_items-2)
-           # self.Queue_listbox.delete(1,secondToLast_item)
-            self.moveSong(-1) 
+           # self.moveSong(-1) 
+            #self.Queue_listbox.delete(1)
+           # self.Queue_listbox.delete(2)
+           # self.Queue_listbox.delete(3)
+           # for testing you have to have two left for some reason
+          
+         
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
     #generates the default album icon for a placeholder on startup

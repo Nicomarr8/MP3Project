@@ -41,6 +41,8 @@ music_directory = os.path.join(home_directory, "Music")
 
 music_directory_path = os.path.join(music_directory, new_directory)
 
+index_of_song = 1
+
 if not os.path.exists(music_directory_path): 
     os.makedirs(music_directory_path)
 
@@ -146,7 +148,11 @@ class Window(tkinter.Tk):
             self.refresh() 
             self.loadSongs()
             self.songScrollbar.update()
-
+            #Changes selected song when directory is loaded
+            global index_of_song 
+            index_of_song =1
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
         # refresh to put everything in place
@@ -453,7 +459,13 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
-            self.Queue_listbox.delete(1)
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(2)
+            #self.Queue_listbox.delete(1)
+            global index_of_song
+            index_of_song = index_of_song + 1
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)
             self.moveSong(1)
             
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
@@ -480,6 +492,11 @@ class Window(tkinter.Tk):
             #sizeOfmyListbox = self.Queue_listbox.size(self)
             #for x in range(sizeOfmyListbox):
             #    self.Queue_listbox.delete(x)
+            global index_of_song
+            index_of_song = index_of_song - 1
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)
+            
             self.moveSong(-1)
          
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
@@ -528,14 +545,12 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[len(self.songs)-1]["id"])
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
-            
 
 
 
     def moveSeek(self,event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
-            self.Queue_listbox.delete(1)
             self.moveSong(1)
             
 

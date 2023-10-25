@@ -123,9 +123,8 @@ class Window(tkinter.Tk):
         #next button
         self.genNextButton(0.4)
 
-        #Song Queue Listbox
-        self.createListbox(0.4)
-
+        self.createListbox()
+       
         # seek bar
         self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
         self.seek.bind("<ButtonRelease-1>",self.seekTo)
@@ -272,7 +271,7 @@ class Window(tkinter.Tk):
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
         # self.songButtons = []
         # pass
-
+       
     #queues and plays the selected song
     def queueSong(self,id):
         for i in range(len(self.songs)):
@@ -295,14 +294,8 @@ class Window(tkinter.Tk):
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
-          
-            #Get the current items in listbox
-            listbox_items = self.Queue_listbox.get(0,tkinter.END)
-            #Add songs to the listbox.
-            for song in self.songs:
-                song_key = f"{song['Title']}-{song['Artist']}"
-                if song_key not in listbox_items:
-                    self.Queue_listbox.insert(tkinter.END,song_key)
+            #Loads into listbox
+            self.loadIntoListbox()
             if self.paused: self.pause()
     # load settings from the JSON file
     def load_settings(self):
@@ -484,14 +477,10 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
-           # num_items = self.Queue_listbox.size()
-           # secondToLast_item = self.Queue_listbox.get(num_items-2)
-           # self.moveSong(-1) 
-            #self.Queue_listbox.delete(1)
-           # self.Queue_listbox.delete(2)
-           # self.Queue_listbox.delete(3)
-           # for testing you have to have two left for some reason
-          
+            #sizeOfmyListbox = self.Queue_listbox.size(self)
+            #for x in range(sizeOfmyListbox):
+            #    self.Queue_listbox.delete(x)
+            self.moveSong(-1)
          
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
@@ -539,6 +528,9 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[len(self.songs)-1]["id"])
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
+            
+
+
 
     def moveSeek(self,event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
@@ -587,7 +579,7 @@ class Window(tkinter.Tk):
                 tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
                             command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
 
-    def createListbox(self,factor):
+    def createListbox(self):# got rid of factor
             self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
             self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
             self.Queue_listbox.insert(tkinter.END, "SongQueue")
@@ -595,9 +587,17 @@ class Window(tkinter.Tk):
             self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
             self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
             self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")   
-          
+    def loadIntoListbox(self):# got rid of factor
+        #Add songs to the listbox.
+        listbox_items = self.Queue_listbox.get(0,tkinter.END)
+        for song in self.songs:
+            song_key = f"{song['Title']}-{song['Artist']}"
+            if song_key not in listbox_items:
+               self.Queue_listbox.insert(tkinter.END,song_key)
+   # def ListboxEvents(self):#factor
+       # if move
 
-    
+   
     
     # Create a listbox to display the song queue
 """   def createListbox(self,factor):

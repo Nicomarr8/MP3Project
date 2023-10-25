@@ -295,15 +295,15 @@ class Window(tkinter.Tk):
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
             self.mixer.music.play()
-            #Clear the listbox
-            self.Queue_listbox.delete
-            #Add songs to the listbox
+          
+            #Get the current items in listbox
+            listbox_items = self.Queue_listbox.get(0,tkinter.END)
+            #Add songs to the listbox.
             for song in self.songs:
-                self.Queue_listbox.insert(tkinter.END,f"{song['Title']}-{song['Artist']}")
-
-
+                song_key = f"{song['Title']}-{song['Artist']}"
+                if song_key not in listbox_items:
+                    self.Queue_listbox.insert(tkinter.END,song_key)
             if self.paused: self.pause()
-
     # load settings from the JSON file
     def load_settings(self):
         try:
@@ -460,7 +460,9 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
+            self.Queue_listbox.delete(1)
             self.moveSong(1)
+            
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 
     #generates the previous button
@@ -482,7 +484,10 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
-            self.moveSong(-1)
+           # num_items = self.Queue_listbox.size()
+           # secondToLast_item = self.Queue_listbox.get(num_items-2)
+           # self.Queue_listbox.delete(1,secondToLast_item)
+            self.moveSong(-1) 
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
     #generates the default album icon for a placeholder on startup
@@ -574,16 +579,146 @@ class Window(tkinter.Tk):
             if track["id"] in self.favorites:
                 tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
                             command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
-    
-    def createListbox(self,factor):
-        self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
-        self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
-        self.Queue_listbox.insert(tkinter.END, "SongQueue")
-        self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
-        self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
-        self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
-        self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")
- 
 
+    def createListbox(self,factor):
+            self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
+            self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
+            self.Queue_listbox.insert(tkinter.END, "SongQueue")
+            self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
+            self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
+            self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
+            self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")   
+          
+
+    
+    
+    # Create a listbox to display the song queue
+"""   def createListbox(self,factor):
+        self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg="white")
+        self.Queue_listbox.grid(row=1, column=3, sticky="nsew")
+        self.Queue_listbox.bind("<Delete>", self.delete_selected_song)
+        self.Queue_listbox.bind("<Up>", self.move_up)
+        self.Queue_listbox.bind("<Down>", self.move_down)
+
+# A function to add a song to the queue
+def add_song_to_queue(self, song_id):
+    song = self.get_song_by_id(song_id)
+    if song:
+        self.song_queue.append(song)
+        self.Queue_listbox.insert(tkinter.END, f"{song['Title']} - {song['Artist']}")
+
+# A function to remove a song from the queue
+def remove_song_from_queue(self, song_id):
+    song = self.get_song_by_id(song_id)
+    if song in self.song_queue:
+        index = self.song_queue.index(song)
+        self.song_queue.remove(song)
+        self.Queue_listbox.delete(index)
+
+# A function to delete the selected song from the queue
+def delete_selected_song(self):
+        # Get the currently selected index in the listbox
+        selected_index = self.Queue_listbox.curselection()
+
+        if selected_index:
+            index_to_delete = int(selected_index[0])
+
+            # Remove the item from the listbox
+            self.Queue_listbox.delete(index_to_delete)
+
+            # Also, remove the corresponding item from your internal song list (assuming you have a list of songs)
+            if 0 <= index_to_delete < len(self.songs):
+                del self.songs[index_to_delete]
+
+# A function to move the selected song up in the queue
+def move_up(self, event):
+    selected_index = self.Queue_listbox.curselection()
+    if selected_index:
+        index = selected_index[0]
+        if index > 0:
+            self.swap_songs_in_queue(index, index - 1)
+
+# A function to move the selected song down in the queue
+def move_down(self, event):
+    selected_index = self.Queue_listbox.curselection()
+    if selected_index:
+        index = selected_index[0]
+        if index < len(self.song_queue) - 1:
+            self.swap_songs_in_queue(index, index + 1)
+
+# A function to swap two songs in the queue
+def swap_songs_in_queue(self, index1, index2):
+    song1 = self.song_queue[index1]
+    song2 = self.song_queue[index2]
+    self.song_queue[index1] = song2
+    self.song_queue[index2] = song1
+    self.update_queue_listbox()
+
+# A function to update the listbox with the current queue
+def update_queue_listbox(self):
+    self.Queue_listbox.delete(0, tkinter.END)
+    for song in self.song_queue:
+        self.Queue_listbox.insert(tkinter.END, f"{song['Title']} - {song['Artist']}")
+
+# A function to get a song by its ID
+def get_song_by_id(self, song_id):
+    for song in self.songs:
+        if song["id"] == song_id:
+            return song
+    return None
+"""
+
+
+
+                
+    
+
+"""
+    selected_index = self.Queue_listbox.curselection()
+        if selected_index:
+            new_index = int(selected_index[0]) + 1  # Insert after the selected item
+
+             # Insert your new item at the desired position (new_index)
+            self.Queue_listbox.insert(new_index, "Your New Song Title")
+
+            # Optionally, update your internal song list to match the listbox
+            self.songs.insert(new_index, {"Title": "Your New Song Title", "Artist": "Artist Name"})
+
+            # You can also clear the previous selection
+            self.Queue_listbox.selection_clear(selected_index)
+            
+
+def delete_selected_song(self):
+    # Get the currently selected index in the listbox
+    selected_index = self.Queue_listbox.curselection()
+
+    if selected_index:
+        index_to_delete = int(selected_index[0])
+        
+        # Remove the item from the listbox
+        self.Queue_listbox.delete(index_to_delete)
+        
+        # Also, remove the corresponding item from your internal song list
+        del self.songs[index_to_delete]
+
+
+    def move_up(self, event):
+        selected_index = self.Queue_listbox.curselection()
+        if selected_index:
+            new_index = int(selected_index[0]) - 1
+            if new_index >= 0:
+                self.Queue_listbox.selection_clear(selected_index)
+                self.Queue_listbox.selection_set(new_index)
+                self.Queue_listbox.see(new_index)
+
+    def move_down(self, event):
+         selected_index = self.Queue_listbox.curselection()
+         if selected_index:
+            new_index = int(selected_index[0]) + 1
+            if new_index < self.Queue_listbox.size():
+                self.Queue_listbox.selection_clear(selected_index)
+                self.Queue_listbox.selection_set(new_index)
+                self.Queue_listbox.see(new_index)
+"""
 # this runs the whole file
 Window().mainloop()

@@ -538,7 +538,9 @@ class Window(tkinter.Tk):
     def moveSeek(self,event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
+            self.Queue_listbox.delete(1)
             self.moveSong(1)
+            
 
        #Favorites
             self.favorites=[]

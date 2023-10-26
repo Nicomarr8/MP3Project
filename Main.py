@@ -459,18 +459,12 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
-           
-            #way1
-            global index_of_song
-            index_of_song = index_of_song + 1
-            if self.Queue_listbox.size() == index_of_song:
-                index_of_song = 1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)
-            self.moveSong(1)
-            #way2
+            #way1         
             #self.Queue_listbox.delete(1)
-            #self.moveSong(1)
+            #way2
+            self.ListboxNextEvent()
+            self.moveSong(1)
+            
             
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 
@@ -493,14 +487,7 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
-            #sizeOfmyListbox = self.Queue_listbox.size(self)
-            #for x in range(sizeOfmyListbox):
-            #    self.Queue_listbox.delete(x)
-            global index_of_song
-            index_of_song = index_of_song - 1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)
-            
+            self.ListboxPrevEvent()
             self.moveSong(-1)
          
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
@@ -613,8 +600,22 @@ class Window(tkinter.Tk):
             song_key = f"{song['Title']}-{song['Artist']}"
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
-   # def ListboxEvents(self):#factor
-       # if move
+    def ListboxNextEvent(self):
+            global index_of_song
+            index_of_song = index_of_song + 1
+            if self.Queue_listbox.size() == index_of_song:
+                index_of_song = 1
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)
+    def ListboxPrevEvent(self):
+            global index_of_song 
+            index_of_song = index_of_song - 1
+            if  index_of_song == 0:
+                index_of_song = self.Queue_listbox.size() - 1
+                self.Queue_listbox.selection_clear(0,tkinter.END)
+                self.Queue_listbox.selection_set(index_of_song)   
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)   
 
    
     

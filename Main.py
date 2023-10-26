@@ -148,11 +148,8 @@ class Window(tkinter.Tk):
             self.refresh() 
             self.loadSongs()
             self.songScrollbar.update()
-            #Changes selected song when directory is loaded
-            global index_of_song 
-            index_of_song =1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)
+            #Changes selected song in the listbox
+            self.ListboxDirectoryEvent()
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
         # refresh to put everything in place
@@ -536,13 +533,18 @@ class Window(tkinter.Tk):
             self.queueSong(self.songs[len(self.songs)-1]["id"])
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
+        
+            
 
 
 
     def moveSeek(self,event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
+            self.ListboxNextEvent()
             self.moveSong(1)
+            
+
             
 
        #Favorites
@@ -586,13 +588,13 @@ class Window(tkinter.Tk):
                             command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
 
     def createListbox(self):# got rid of factor
-            self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
-            self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
-            self.Queue_listbox.insert(tkinter.END, "SongQueue")
-            self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
-            self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
-            self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
-            self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")   
+        self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
+        self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
+        self.Queue_listbox.insert(tkinter.END, "SongQueue")
+        self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
+        self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
+        self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
+        self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")   
     def loadIntoListbox(self):# got rid of factor
         #Add songs to the listbox.
         listbox_items = self.Queue_listbox.get(0,tkinter.END)
@@ -601,24 +603,26 @@ class Window(tkinter.Tk):
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
     def ListboxNextEvent(self):
-            global index_of_song
-            index_of_song = index_of_song + 1
-            if self.Queue_listbox.size() == index_of_song:
-                index_of_song = 1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)
+        global index_of_song
+        index_of_song = index_of_song + 1
+        if self.Queue_listbox.size() == index_of_song:
+            index_of_song = 1
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song)
     def ListboxPrevEvent(self):
-            global index_of_song 
-            index_of_song = index_of_song - 1
-            if  index_of_song == 0:
-                index_of_song = self.Queue_listbox.size() - 1
-                self.Queue_listbox.selection_clear(0,tkinter.END)
-                self.Queue_listbox.selection_set(index_of_song)   
+        global index_of_song 
+        index_of_song = index_of_song - 1
+        if  index_of_song == 0:
+            index_of_song = self.Queue_listbox.size() - 1
             self.Queue_listbox.selection_clear(0,tkinter.END)
             self.Queue_listbox.selection_set(index_of_song)   
-
-   
-    
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song)   
+    def ListboxDirectoryEvent(self):
+        global index_of_song 
+        index_of_song =1
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song)
     # Create a listbox to display the song queue
 """   def createListbox(self,factor):
         self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg="white")

@@ -144,7 +144,8 @@ class Window(tkinter.Tk):
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
-            self.removeButtons()          
+            self.removeButtons()
+            self.RemoveOldSongsListbox()          
             self.refresh() 
             self.loadSongs()
             self.songScrollbar.update()
@@ -602,6 +603,11 @@ class Window(tkinter.Tk):
             song_key = f"{song['Title']}-{song['Artist']}"
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
+    def RemoveOldSongsListbox(self):
+       
+        for song in self.songs:
+            self.Queue_listbox.delete(1)
+        
     def ListboxNextEvent(self):
         global index_of_song
         index_of_song = index_of_song + 1
@@ -617,10 +623,11 @@ class Window(tkinter.Tk):
             self.Queue_listbox.selection_clear(0,tkinter.END)
             self.Queue_listbox.selection_set(index_of_song)   
         self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song)   
+        self.Queue_listbox.selection_set(index_of_song)
+        # ListboxDirectoryEvent doesn't work as expected   
     def ListboxDirectoryEvent(self):
         global index_of_song 
-        index_of_song =1
+        index_of_song = 1
         self.Queue_listbox.selection_clear(0,tkinter.END)
         self.Queue_listbox.selection_set(index_of_song)
     # Create a listbox to display the song queue

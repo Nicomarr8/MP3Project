@@ -459,14 +459,18 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(2)
-            #self.Queue_listbox.delete(1)
+           
+            #way1
             global index_of_song
             index_of_song = index_of_song + 1
+            if self.Queue_listbox.size() == index_of_song:
+                index_of_song = 1
             self.Queue_listbox.selection_clear(0,tkinter.END)
             self.Queue_listbox.selection_set(index_of_song)
             self.moveSong(1)
+            #way2
+            #self.Queue_listbox.delete(1)
+            #self.moveSong(1)
             
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 

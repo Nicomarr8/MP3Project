@@ -388,12 +388,11 @@ class Window(tkinter.Tk):
         self.genScrollBar()
 
         #frames
-        self.rowconfigure(0,weight=1)
-        self.rowconfigure(1,weight=1)
-        self.rowconfigure(2,weight=1)
-        self.rowconfigure(3,weight=1)
-        self.rowconfigure(4,weight=1)
+        for i in range(5):
+            self.rowconfigure(i,weight=1, uniform='row')
         self.rowconfigure(5,weight=1)
+        for i in range(2):
+            self.columnconfigure(i,weight=1,uniform='column')
         self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew",rowspan=5)
         self.frames["left"].grid_rowconfigure(0, weight=1)
         self.frames["left"].grid_columnconfigure(0, weight=1)

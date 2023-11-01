@@ -5,7 +5,9 @@
 # optimization?
 # finding its own directory
 
-import time, tkinter, json, eyed3, pygame, os, threading
+
+import time, tkinter, json, eyed3, pygame, os, threading, random
+
 from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
@@ -136,6 +138,13 @@ class Window(tkinter.Tk):
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
 
+        # Add a "Shuffle" button to your GUI
+        shuffle_button = tkinter.Button(self.frames["down"], text="Shuffle", command=self.shuffle_songs)
+        shuffle_button.grid(row=5, column=1)
+        #tag information stuff
+        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14))
+        #refresh to put everything in place
+
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
@@ -184,7 +193,16 @@ class Window(tkinter.Tk):
         if selected_index:
             selected_song = self.filtered_songs[int(selected_index[0])]
             self.queueSong(selected_song["id"])
-
+    def shuffle_songs(self):
+        random.shuffle(self.songs)
+        self.updateSongButtons()
+        if self.songs:
+            self.queueSong(self.songs[0]["id"])
+    def updateSongButtons(self):
+        for i in range(len(self.songButtons)):
+            self.songButtons[i].grid_forget()  # Remove the existing button
+        self.songButtons.clear()
+        self.loadSongsIntoFrame()        
     # give this a button
     def loadSongs(self):
         self.songs = []
@@ -252,6 +270,14 @@ class Window(tkinter.Tk):
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
+        # Load songs into the right frame without shuffling
+        self.loadSongsIntoFrame()
+
+        # Queue the first song
+        if self.songs:
+            self.queueSong(self.songs[0]["id"])    
+        
+   
 
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
@@ -260,7 +286,8 @@ class Window(tkinter.Tk):
             songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
             songButton.grid(row=i, column=0)
             self.songButtons.append(songButton)
-
+    
+    
     def removeButtons(self):
         self.songCanvas.delete("all")
         self.songScrollbar.destroy()
@@ -519,7 +546,9 @@ class Window(tkinter.Tk):
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
 
+
     def moveSeek(self,event):
+
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)

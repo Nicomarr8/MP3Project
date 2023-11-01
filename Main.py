@@ -112,7 +112,7 @@ class Window(tkinter.Tk):
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
 
         #album default icon
-        
+        self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
         self.genAlbumIcon(2)
 
         #prev button
@@ -150,7 +150,7 @@ class Window(tkinter.Tk):
             self.loadSongs()
             # self.songScrollbar.update()
 
-        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory).grid(row=5, column=0)
         
         # refresh to put everything in place
         self.refresh()
@@ -290,15 +290,15 @@ class Window(tkinter.Tk):
             songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
             songButton.grid(row=i, column=0)
             self.songButtons.append(songButton)
-        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all"))) 
 
     def removeButtons(self):
         self.songCanvas.delete("all")
         self.songScrollbar.destroy()
         self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
+        self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
         # self.songButtons = []
         # pass
 
@@ -315,6 +315,7 @@ class Window(tkinter.Tk):
             self.canvasAlbum.grid_remove()
             if self.songQueued["Image"]:
                 # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                self.canvasAlbum.config(width=600,height=600)
                 self.canvasAlbum.grid(row=0, column=0, rowspan=3, columnspan=3)
                 self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
                 self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
@@ -526,7 +527,7 @@ class Window(tkinter.Tk):
     
     #generates the default album icon for a placeholder on startup
     def genAlbumIcon(self,factor):
-        self.canvasAlbum = tkinter.Canvas(self.frames["left"],width=100*factor,height=100*factor,background="grey")
+        self.canvasAlbum.config(width=100*factor,height=100*factor)
         self.canvasAlbum.create_oval(35*factor,20*factor,65*factor,50*factor,outline="black",fill="white",width=2)
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 

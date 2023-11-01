@@ -315,7 +315,7 @@ class Window(tkinter.Tk):
             self.canvasAlbum.grid_remove()
             if self.songQueued["Image"]:
                 # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
-                self.canvasAlbum.config(width=600,height=600)
+                self.canvasAlbum.config(width=600,height=400)
                 self.canvasAlbum.grid(row=0, column=0, rowspan=3, columnspan=3)
                 self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
                 self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)

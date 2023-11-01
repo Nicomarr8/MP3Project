@@ -297,7 +297,7 @@ class Window(tkinter.Tk):
         self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
         self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
-        self.songScrollbar.config(command=self.songCanvas.yview)
+        #self.songScrollbar.config(command=self.songCanvas.yview)
         self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
         # self.songButtons = []
         # pass

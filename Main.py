@@ -321,7 +321,7 @@ class Window(tkinter.Tk):
                 self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
             else:
                 self.genAlbumIcon(2)
-                self.canvasAlbum.grid(row=1, column=1)
+                self.canvasAlbum.grid(row=1, column=1, rowspan=1, columnspan=1)
             #gives the seek abr the right length
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0

@@ -125,6 +125,9 @@ class Window(tkinter.Tk):
         #next button
         self.genNextButton(0.4)
 
+        # will add a button
+        #self.genAddButton(0.4)
+
         self.createListbox()
        
         # seek bar
@@ -148,9 +151,12 @@ class Window(tkinter.Tk):
             self.ListboxRemoveOldSongs()          
             self.refresh() 
             self.loadSongs()
+            #Select a song
+            #self.selectSong()
             self.songScrollbar.update()
             #Changes selected song in the listbox
             self.ListboxDirectoryEvent()
+            
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
         # refresh to put everything in place
@@ -300,6 +306,8 @@ class Window(tkinter.Tk):
             self.mixer.music.play()
             #Loads into listbox
             self.loadIntoListbox()
+            #SelectSong
+            #self.SelectSong()
             if self.paused: self.pause()
     # load settings from the JSON file
     def load_settings(self):
@@ -461,6 +469,7 @@ class Window(tkinter.Tk):
             #way1         
             #self.Queue_listbox.delete(1)
             #way2
+            #self.selectSong()
             self.ListboxNextEvent()
             self.moveSong(1)
             
@@ -606,6 +615,59 @@ class Window(tkinter.Tk):
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
 
+    """
+    def selectSong(self):
+        # put the selected song into the queue
+        file_path = filedialog.askopenfilename()
+       
+        #need to change file_path to be ID
+        #file Selector
+        #FileName Change
+        self.queueSong(file_path)
+        i = file_path
+        print(file_path)
+        if i.lower().endswith(".mp3"):
+            mp3 = eyed3.load(file_path)
+
+            if mp3:
+                trackTitle = mp3.tag.title
+                trackArtist = mp3.tag.artist
+                trackAlbum = mp3.tag.album
+                trackRD = mp3.tag.getBestDate()
+                trackImage = False
+            else:
+                print("Error loading MP3")
+
+            # if trackTitle == None: trackTitle = "Unknown"
+            # if trackArtist == None: trackArtist = "Unknown"
+            # if trackAlbum == None: trackAlbum = "Unknown"
+            # if trackRD == None: trackRD = "Unknown"
+
+            #this generates the imgs from the mp3s
+            if mp3.tag.images:
+                for image in mp3.tag.images:
+                    image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
+                    image_file.write(image.image_data)
+                    image_file.close()
+                    trackImage = True
+            else:
+                self.canvasAlbum.delete("all")
+                self.canvasAlbum.grid_remove()
+                self.canvasAlbum.grid(row=1,column=1)
+                # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                self.genAlbumIcon(2)
+                trackImage = False
+
+            #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
+            self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
+            # print(mp3.info.time_secs, end = " | ")
+            self.idCounter += 1
+            listbox_items = self.Queue_listbox.get(0,tkinter.END)
+            song_key = f"{self.songs['Title']}-{self.songs['Artist']}"
+            if song_key not in listbox_items:
+                self.Queue_listbox.insert(tkinter.END,song_key)
+        """
+
     def ListboxRemoveOldSongs(self):
         for song in self.songs:
             self.Queue_listbox.delete(1)
@@ -632,8 +694,9 @@ class Window(tkinter.Tk):
         global index_of_song 
         index_of_song = 1
         self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song)
-                  
-    
+        self.Queue_listbox.selection_set(index_of_song) 
+
+
+
 # this runs the whole file
 Window().mainloop()

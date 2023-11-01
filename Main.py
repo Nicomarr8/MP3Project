@@ -388,9 +388,8 @@ class Window(tkinter.Tk):
         self.genScrollBar()
 
         #frames
-        for i in range(5):
+        for i in range(8):
             self.rowconfigure(i,weight=1, uniform='row')
-        self.rowconfigure(5,weight=1)
         for i in range(2):
             self.columnconfigure(i,weight=1,uniform='column')
         self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew",rowspan=5)
@@ -403,7 +402,7 @@ class Window(tkinter.Tk):
         self.frames["right"].grid(row=0, column=1, padx=0, sticky="nsew",rowspan=5)
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
-        self.frames["down"].grid(row=5, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
+        self.frames["down"].grid(row=5, column=0, rowspan=3,columnspan=2, padx=0, pady=1, sticky="nsew")
         self.songCanvas.grid(row=0,column=0,sticky="nsew")
         self.songCanvas.grid_rowconfigure(0,weight=1)
         self.songCanvas.grid_columnconfigure(0,weight=1)

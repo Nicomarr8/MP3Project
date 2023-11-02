@@ -129,6 +129,8 @@ class Window(tkinter.Tk):
         #self.genAddButton(0.4)
 
         self.createListbox()
+
+        self.buttonListbox()
        
         # seek bar
         self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
@@ -604,8 +606,8 @@ class Window(tkinter.Tk):
         self.Queue_listbox.insert(tkinter.END, "SongQueue")
         self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
         self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
-        self.Queue_listbox.grid(row=1, column =3,sticky ="nsew" ) 
-        self.listbox_scrollbar.grid(row=1, column=4,sticky="nsw")   
+        self.Queue_listbox.grid(row=1, column =3,rowspan=2, sticky ="nsew") 
+        self.listbox_scrollbar.grid(row=1, column=4,rowspan=2,sticky="nsw")   
 
     def loadIntoListbox(self):
         #Populates the listbox 
@@ -614,6 +616,91 @@ class Window(tkinter.Tk):
             song_key = f"{song['Title']}-{song['Artist']}"
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
+
+    def buttonListbox(self):
+     # made the two buttons show up 
+     self.btnAddToListbox =  tkinter.Button(self.frames["down"], text = "Add",bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=1, column=4)
+     self.btnDeleteToListbox =  tkinter.Button(self.frames["down"], text = "Delete",bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=2, column=4)
+     self.btnUpToListbox = tkinter.Button(self.frames["down"], text = "↑",bg="SystemButtonFace", activebackground="Black", fg="Black",command = self.upListbox).grid(row=1, column=2, sticky="nes")
+     self.btnDownToListbox = tkinter.Button(self.frames["down"], text = "↓",bg="SystemButtonFace", activebackground="Black", fg="Black",command = self.downListBox).grid(row=2, column=2, sticky="es")
+     self.grid_columnconfigure(0,weight=1)
+     self.grid_rowconfigure(1,weight=0)
+     self.grid_rowconfigure(2,weight=1)
+     #Click  
+    # def myClick(self):
+    #     self.btnAddToListbox = tkinter.Label(self.frames["down"], text = "Add",bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=1, column=5)
+    # def myRelease(self):
+
+    def upListbox(self):
+        current = self.Queue_listbox.curselection() 
+
+        if not current:#check if there is a selection
+            return
+        
+        current = int(current[0])# convert to int
+
+        if current == 0: # check to see if song already at top
+            return 
+        if 0 < current < self.Queue_listbox.size():
+            item_text = self.Queue_listbox.get(current)
+            self.Queue_listbox.delete(current)
+        insert_index = current - 1 
+
+        if insert_index < 1:# position 1 is the first songs
+            insert_index = 1
+        self.Queue_listbox.insert(insert_index,item_text)
+
+    def downListBox(self):
+        current = self.Queue_listbox.curselection() 
+
+        if not current:#check if there is a selection
+            return
+        
+        current = int(current[0])# convert to int
+
+        if current == self.Queue_listbox.size(): # check to see if song already at top
+            return 
+
+        if 0 < current < self.Queue_listbox.size():
+            item_text = self.Queue_listbox.get(current)
+            self.Queue_listbox.delete(current)
+        insert_index = current + 1 
+
+        if insert_index > self.Queue_listbox.size():# position 1 is the first songs
+            insert_index = self.Queue_listbox.size()
+        self.Queue_listbox.insert(insert_index,item_text)
+        #song_to_move = self.pop(current)
+        #self.songs.insert(insert_index,song_to_move)
+    def ListboxRemoveOldSongs(self):
+        for song in self.songs:
+            self.Queue_listbox.delete(1)
+            
+    def ListboxNextEvent(self):
+        global index_of_song
+        index_of_song = index_of_song + 1
+        if self.Queue_listbox.size() == index_of_song:
+            index_of_song = 1
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song)
+
+    def ListboxPrevEvent(self):
+        global index_of_song 
+        index_of_song = index_of_song - 1
+        if  index_of_song == 0:
+            index_of_song = self.Queue_listbox.size() - 1
+            self.Queue_listbox.selection_clear(0,tkinter.END)
+            self.Queue_listbox.selection_set(index_of_song)   
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song) 
+
+    def ListboxDirectoryEvent(self):
+        global index_of_song 
+        index_of_song = 1
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index_of_song) 
+
+
+        
 
     """
     def selectSong(self):
@@ -668,35 +755,7 @@ class Window(tkinter.Tk):
                 self.Queue_listbox.insert(tkinter.END,song_key)
         """
 
-    def ListboxRemoveOldSongs(self):
-        for song in self.songs:
-            self.Queue_listbox.delete(1)
-            
-    def ListboxNextEvent(self):
-        global index_of_song
-        index_of_song = index_of_song + 1
-        if self.Queue_listbox.size() == index_of_song:
-            index_of_song = 1
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song)
-
-    def ListboxPrevEvent(self):
-        global index_of_song 
-        index_of_song = index_of_song - 1
-        if  index_of_song == 0:
-            index_of_song = self.Queue_listbox.size() - 1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)   
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song) 
-
-    def ListboxDirectoryEvent(self):
-        global index_of_song 
-        index_of_song = 1
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song) 
-
-
+   
 
 # this runs the whole file
 Window().mainloop()

@@ -540,67 +540,58 @@ class Window(tkinter.Tk):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
+    #Favorites
+        self.favorites = []
+        self.load_favorites()
 
-       #Favorites
-            self.favorites=[]
-            self.load_favorites()
-            self.load_songs()
-            self.refresh ()
+        # A variable to keep track of which playlist is currently displayed
+        self.showing_favorites = False
+            # Add a separate "Favorites" button in your init method
+        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
+        fav_button.grid(row=5, column=2)
 
-           # Add this function to toggle favorites
+        def show_favorites(self):
+            if self.showing_favorites:
+                # Display the "All Songs" playlist
+                self.load_songs()
+                self.refresh()
+                self.showing_favorites = False
+            else:
+                # Display the "Favorites" playlist
+                self.load_favorites()
+                self.refresh()
+                self.showing_favorites = True
 
+        # Define the toggle_favorite method to add/remove songs to/from favorites
+        def toggle_favorite(self, track_id):
+            if track_id in self.favorites:
+                self.favorites.remove(track_id)
+            else:
+                self.favorites.append(track_id)
+            
+            # Save favorites to settings
+            self.save_favorites()
 
-    def toggle_favorite(self, track_id):
-        if track_id in self.favorites:
-            self.favorites.remove(track_id)
-        else:
-            self.favorites.append(track_id)
-
-        # Update the "Favorites" playlist in the UI.
-        self.update_favorites_playlist()
-
-        # Save favorites to settings.
-        self.save_favorites()
-    
- 
-    def update_favorites_playlist(self):
-    # Clear the current favorites playlist (if any).
-        self.frames["favorites"].destroy()
-
-        # Create a new frame for the "Favorites" playlist.
-        self.frames["favorites"] = tkinter.Frame(self, bg="white")
-        self.frames["favorites"].grid(row=0, column=1, padx=1, pady=1, sticky="nsew", rowspan=5)
-        self.frames["favorites"].grid_rowconfigure(0, weight=1)
-        self.frames["favorites"].grid_columnconfigure(0, weight=1)
-
-        # Add a label to the "Favorites" playlist.
-        tkinter.Label(self.frames["favorites"], text="Favorites Playlist", bg="white").grid(row=0, column=0, padx=5, pady=5)
-
-
-
-        # Add favorited tracks to the "Favorites" playlist.
-        for track in self.songs:
-            if track["id"] in self.favorites:
-                tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
-                            command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
-    
-
+        # Define the update_favorites_playlist method to populate the playlist based on favorites
+        def update_favorites_playlist(self):
+            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+            self.refresh()
+            
+        # Correctly define load_songs method to load all songs
         def load_songs(self):
-            self.songs = []
-            self.idCounter = 0
+            self.songs = self.all_songs
+            self.refresh()
 
+        # Correctly define load_favorites method to load favorite songs
+        def load_favorites(self):
+            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+            self.refresh()
 
-        for i in range(len(self.songs)):
-            # Create a "Favorite" button for each song
-            fav_button = tkinter.Button(self.frames["innerRight"], text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",
-                            command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-            
-            # Create a function to toggle favorites when the button is clicked
-            fav_button.configure(command=partial(self.toggle_favorite, self.songs[i]["id"]))
-            
-            fav_button.grid(row=i, column=0)
-            self.songButtons.append(fav_button)
+        # Initialize a variable to track which playlist is currently displayed
+        self.showing_favorites = False
 
+        # Load all songs initially
+        self.load_songs()
 
 # this runs the whole file
 Window().mainloop()

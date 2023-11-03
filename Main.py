@@ -547,7 +547,8 @@ class Window(tkinter.Tk):
             self.load_songs()
             self.refresh ()
 
-           
+           # Add this function to toggle favorites
+
 
     def toggle_favorite(self, track_id):
         if track_id in self.favorites:
@@ -560,8 +561,8 @@ class Window(tkinter.Tk):
 
         # Save favorites to settings.
         self.save_favorites()
+    
  
-        
     def update_favorites_playlist(self):
     # Clear the current favorites playlist (if any).
         self.frames["favorites"].destroy()
@@ -575,6 +576,8 @@ class Window(tkinter.Tk):
         # Add a label to the "Favorites" playlist.
         tkinter.Label(self.frames["favorites"], text="Favorites Playlist", bg="white").grid(row=0, column=0, padx=5, pady=5)
 
+
+
         # Add favorited tracks to the "Favorites" playlist.
         for track in self.songs:
             if track["id"] in self.favorites:
@@ -582,7 +585,22 @@ class Window(tkinter.Tk):
                             command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
     
 
-   
+        def load_songs(self):
+            self.songs = []
+            self.idCounter = 0
+
+
+        for i in range(len(self.songs)):
+            # Create a "Favorite" button for each song
+            fav_button = tkinter.Button(self.frames["innerRight"], text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",
+                            command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
+            
+            # Create a function to toggle favorites when the button is clicked
+            fav_button.configure(command=partial(self.toggle_favorite, self.songs[i]["id"]))
+            
+            fav_button.grid(row=i, column=0)
+            self.songButtons.append(fav_button)
+
 
 # this runs the whole file
 Window().mainloop()

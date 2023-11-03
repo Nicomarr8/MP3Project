@@ -408,9 +408,12 @@ class Window(tkinter.Tk):
         self.songCanvas.grid_columnconfigure(0,weight=1)
         for i in range(7):
             self.frames["down"].grid_columnconfigure(i, weight=1, uniform='column')
-        self.frames["down"].grid_rowconfigure(0, weight=1)
-        self.frames["down"].grid_rowconfigure(1, weight=1)
-        self.frames["down"].grid_rowconfigure(2, weight=1)
+        for i in range(6):
+            self.frames["down"].grid_rowconfigure(i, weight=1)
+        # self.frames["down"].grid_rowconfigure(0, weight=1)
+        # self.frames["down"].grid_rowconfigure(1, weight=1)
+        # self.frames["down"].grid_rowconfigure(2, weight=1)
+        
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")

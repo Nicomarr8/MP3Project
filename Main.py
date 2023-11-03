@@ -600,13 +600,6 @@ class Window(tkinter.Tk):
             
             fav_button.grid(row=i, column=0)
             self.songButtons.append(fav_button)
-# Create a "Like" and "Favorite" button for each song.
-        like_button = tkinter.Button(self.frames["innerRight"], text="Like", command=partial(self.like_song, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-        fav_button = tkinter.Button(self.frames["innerRight"], text="Favorite", command=partial(self.toggle_favorite, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-
-        # Create a row for each song with "Like" and "Favorite" buttons.
-        like_button.grid(row=i, column=1)
-        fav_button.grid(row=i, column=2)
 
 
 # this runs the whole file

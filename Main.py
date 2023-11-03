@@ -5,9 +5,7 @@
 # optimization?
 # finding its own directory
 
-
 import time, tkinter, json, eyed3, pygame, os, threading, random
-
 from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
@@ -141,6 +139,7 @@ class Window(tkinter.Tk):
         # Add a "Shuffle" button to your GUI
         shuffle_button = tkinter.Button(self.frames["down"], text="Shuffle", command=self.shuffle_songs)
         shuffle_button.grid(row=5, column=1)
+
         #tag information stuff
         self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14))
         #refresh to put everything in place
@@ -314,6 +313,8 @@ class Window(tkinter.Tk):
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
             self.seek.set(0)
+            #displays information about the currently playing track
+            self.tagInfo.config(text=f"{self.songQueued['Title']}   |   {self.songQueued['Artist']}   |   {self.songQueued['Album']}")
             self.seek.config(label="00:00")
             #loads and then plays the selected song
             self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
@@ -398,18 +399,22 @@ class Window(tkinter.Tk):
             self.frames["down"].grid_columnconfigure(i, weight=1)
         self.frames["down"].grid_rowconfigure(0, weight=1)
         self.frames["down"].grid_rowconfigure(1, weight=1)
+        self.frames["down"].grid_rowconfigure(2, weight=1)
 
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")
+
+        #tag info
+        self.tagInfo.grid(row=0,column=0,columnspan=7, sticky="nsew")
 
         #Images
         self.refreshCanvases()
 
         #seek bar
-        self.seek.grid(row=0, column=0,columnspan=4,sticky="nsew")
+        self.seek.grid(row=1, column=0,columnspan=4,sticky="nsew")
         
         #volume slider
-        self.volume.grid(row=0, column=4,columnspan=3,sticky="nsew")
+        self.volume.grid(row=1, column=4,columnspan=3,sticky="nsew")
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -426,7 +431,7 @@ class Window(tkinter.Tk):
         
         self.canvasAlbum.grid(row=1,column=1)
         for i in range(len(self.canvases)):
-            self.canvases[list(self.canvases)[i]].grid(row=1,column=i,pady=2)
+            self.canvases[list(self.canvases)[i]].grid(row=2,column=i,pady=2)
 
     #generates the play/pause button image
     def genPausePlayButton(self,factor):
@@ -498,7 +503,13 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([85*factor,25*factor,45*factor,50*factor,85*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
-            self.moveSong(-1)
+
+            if (self.seek.get() <= 5):
+                self.moveSong(-1)
+            else:
+                self.seek.set(0)
+                self.mixer.music.set_pos(self.seek.get())
+
         self.canvases["prev"].bind("<ButtonRelease-1>",onRelease)
     
     #generates the default album icon for a placeholder on startup
@@ -546,12 +557,62 @@ class Window(tkinter.Tk):
         elif self.songQueued["id"] + direction > len(self.songs)-1:
             self.queueSong(self.songs[0]["id"])
 
-
-    def moveSeek(self,event):
-
+    def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
+    #Favorites
+        self.favorites = []
+        self.load_favorites()
+
+        # A variable to keep track of which playlist is currently displayed
+        self.showing_favorites = False
+            # Add a separate "Favorites" button in your init method
+        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
+        fav_button.grid(row=5, column=2)
+
+        def show_favorites(self):
+            if self.showing_favorites:
+                # Display the "All Songs" playlist
+                self.load_songs()
+                self.refresh()
+                self.showing_favorites = False
+            else:
+                # Display the "Favorites" playlist
+                self.load_favorites()
+                self.refresh()
+                self.showing_favorites = True
+
+        # Define the toggle_favorite method to add/remove songs to/from favorites
+        def toggle_favorite(self, track_id):
+            if track_id in self.favorites:
+                self.favorites.remove(track_id)
+            else:
+                self.favorites.append(track_id)
+            
+            # Save favorites to settings
+            self.save_favorites()
+
+        # Define the update_favorites_playlist method to populate the playlist based on favorites
+        def update_favorites_playlist(self):
+            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+            self.refresh()
+            
+        # Correctly define load_songs method to load all songs
+        def load_songs(self):
+            self.songs = self.all_songs
+            self.refresh()
+
+        # Correctly define load_favorites method to load favorite songs
+        def load_favorites(self):
+            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+            self.refresh()
+
+        # Initialize a variable to track which playlist is currently displayed
+        self.showing_favorites = False
+
+        # Load all songs initially
+        self.load_songs()
 
 # this runs the whole file
 Window().mainloop()

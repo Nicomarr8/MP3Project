@@ -567,7 +567,7 @@ class Window(tkinter.Tk):
             if song["id"] == song_id:
                 self.favorites.append(song)
                 break
-     
+  
     def display_liked_songs(self):
         # Clear the current list
         self.removeButtons()
@@ -590,8 +590,6 @@ class Window(tkinter.Tk):
 
         self.loadSongsIntoFrame()
         if self.songs:
-            self.queueSong(self.songs[0]["id"])
-
-              
+            self.queueSong(self.songs[0]["id"])            
 # this runs the whole file
 Window().mainloop()

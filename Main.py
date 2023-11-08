@@ -7,6 +7,7 @@
 
 
 import time, tkinter, json, eyed3, pygame, os, threading
+from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
 from PIL import ImageTk,Image
@@ -132,6 +133,9 @@ class Window(tkinter.Tk):
         self.volume.set(50)
 
         #this is the stuff for in the right frame for the songs
+        style=ttk.Style()
+        style.theme_use('classic')
+        style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
         self.scrollbar = tkinter.Scrollbar(self.frames["right"])
         self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.text.yview)
@@ -142,7 +146,7 @@ class Window(tkinter.Tk):
             self.removeButtons()          
             self.refresh() 
             self.loadSongs()
-            self.songScrollbar.update()
+            #self.songScrollbar.update()
 
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         

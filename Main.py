@@ -59,6 +59,7 @@ class Window(tkinter.Tk):
         self.songButtons = []
         self.idCounter = 0
         self.paused = True
+        self.showFavorites = False
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -237,10 +238,10 @@ class Window(tkinter.Tk):
                         else:
                             print("Error loading MP3")
 
-                        # if trackTitle == None: trackTitle = "Unknown"
-                        # if trackArtist == None: trackArtist = "Unknown"
-                        # if trackAlbum == None: trackAlbum = "Unknown"
-                        # if trackRD == None: trackRD = "Unknown"
+                        if trackTitle == None: trackTitle = "Unknown"
+                        if trackArtist == None: trackArtist = "Unknown"
+                        if trackAlbum == None: trackAlbum = "Unknown"
+                        if trackRD == None: trackRD = "Unknown"
 
                         #this generates the imgs from the mp3s
                         if mp3.tag.images:
@@ -274,6 +275,7 @@ class Window(tkinter.Tk):
             songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
             songButton.grid(row=i, column=0)
             self.songButtons.append(songButton)
+        #self.songs = [song for song in self.songs if song in self.favorites]
 
     def removeButtons(self):
         self.songCanvas.delete("all")
@@ -575,21 +577,8 @@ class Window(tkinter.Tk):
         # Populate the list with liked songs
         for song in self.favorites:
             song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
-            song_label = tkinter.Label(self.frames["innerRight"], text=song_info, bg="black", fg="white")
-            song_label.grid(row=len(self.songButtons), column=0)
-            self.songButtons.append(song_label)
+            songButton = tkinter.Button(self.frames["innerRight"], text=song_info, bg="black", fg="white")
+            songButton.grid(row=len(self.songButtons), column=0)
+            self.songButtons.append(songButton)
 
-    # Modify loadSongs to include only the liked songs
-    def loadSongs(self):
-        self.songs = []
-        self.idCounter = 0
-        # ...
-
-        # Add only the liked songs to the songs list
-        self.songs = [song for song in self.songs if song in self.favorites]
-
-        self.loadSongsIntoFrame()
-        if self.songs:
-            self.queueSong(self.songs[0]["id"])            
-# this runs the whole file
 Window().mainloop()

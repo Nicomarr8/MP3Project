@@ -7,7 +7,6 @@
 
 
 import time, tkinter, json, eyed3, pygame, os, threading
-from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
 from PIL import ImageTk,Image
@@ -300,7 +299,7 @@ class Window(tkinter.Tk):
     
     def genScrollBar(self):
         # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.songScrollbar = tkinter.Scrollbar(self.frames["right"], orient="vertical")
         self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
         self.songScrollbar.config(command=self.songCanvas.yview)
         self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
@@ -340,7 +339,7 @@ class Window(tkinter.Tk):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
 
-        self.genScrollBar()
+        #self.genScrollBar()
 
         #frames
         self.rowconfigure(0,weight=1)
@@ -360,9 +359,9 @@ class Window(tkinter.Tk):
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
         self.frames["down"].grid(row=5, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
-        self.songCanvas.grid(row=0,column=0,sticky="nsew")
-        self.songCanvas.grid_rowconfigure(0,weight=1)
-        self.songCanvas.grid_columnconfigure(0,weight=1)
+        # self.songCanvas.grid(row=0,column=0,sticky="nsew")
+        # self.songCanvas.grid_rowconfigure(0,weight=1)
+        # self.songCanvas.grid_columnconfigure(0,weight=1)
         for i in range(7):
             self.frames["down"].grid_columnconfigure(i, weight=1)
         self.frames["down"].grid_rowconfigure(0, weight=1)
@@ -375,7 +374,7 @@ class Window(tkinter.Tk):
         self.scrollbar.grid(row=0,column=1,sticky="nsew")
 
         #scrollbar
-        self.songScrollbar.grid(row=0, column=1, sticky="nsew")
+        #self.songScrollbar.grid(row=0, column=1, sticky="nsew")
 
         #Images
         self.refreshCanvases()

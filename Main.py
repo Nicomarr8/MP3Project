@@ -157,10 +157,10 @@ class Window(tkinter.Tk):
             self.ListboxRemoveOldSongs()
             self.loadSongs()
             self.songScrollbar.update()
-            #self.ListboxHighlightPlaying()
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.currentSong = 0
-            self.Queue_listbox.selection_set(self.currentSong)
+            self.ListboxHighlightPlaying()
+            #self.Queue_listbox.selection_clear(0,tkinter.END)
+            #self.currentSong = 0
+           # self.Queue_listbox.selection_set(self.currentSong)
 
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
@@ -262,7 +262,7 @@ class Window(tkinter.Tk):
                             trackImage = False
 
                         #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
-                        self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
+                        self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":self.directory+"//"+i,"Length":mp3.info.time_secs})
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
                 self.loadSongsIntoFrame()
@@ -309,7 +309,8 @@ class Window(tkinter.Tk):
             self.tagInfo.config(text=f"{self.songQueued['Title']}   |   {self.songQueued['Artist']}   |   {self.songQueued['Album']}")
             self.seek.config(label="00:00")
             #loads and then plays the selected song
-            self.mixer.music.load(self.directory + "\\" + self.songQueued["Directory"])
+            print("THE DIRECTORY IS ", self.songQueued["Directory"]) 
+            self.mixer.music.load(self.songQueued["Directory"])
             self.mixer.music.play()
             if self.paused: self.pause()
             self.loadIntoListbox()
@@ -475,10 +476,10 @@ class Window(tkinter.Tk):
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
             self.moveSong(1)
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.currentSong += 1
-            self.Queue_listbox.selection_set(self.currentSong)
-            #self.ListboxHighlightPlaying()
+           # self.Queue_listbox.selection_clear(0,tkinter.END)
+           # self.currentSong += 1
+            #self.Queue_listbox.selection_set(self.currentSong)
+            self.ListboxHighlightPlaying()
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 
     #generates the previous button
@@ -503,10 +504,10 @@ class Window(tkinter.Tk):
 
             if (self.seek.get() <= 5):
                 self.moveSong(-1)
-               # self.ListboxHighlightPlaying()
-                self.Queue_listbox.selection_clear(0,tkinter.END)
-                self.currentSong -= 1
-                self.Queue_listbox.selection_set(self.currentSong)
+                self.ListboxHighlightPlaying()
+               # self.Queue_listbox.selection_clear(0,tkinter.END)
+               # self.currentSong -= 1
+               # self.Queue_listbox.selection_set(self.currentSong)
             else:
                 self.seek.set(0)
                 self.mixer.music.set_pos(self.seek.get())
@@ -580,10 +581,10 @@ class Window(tkinter.Tk):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
-            #self.ListboxHighlightPlaying()
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.currentSong += 1
-            self.Queue_listbox.selection_set(self.currentSong)
+            self.ListboxHighlightPlaying()
+          #  self.Queue_listbox.selection_clear(0,tkinter.END)
+            #self.currentSong += 1
+          #  self.Queue_listbox.selection_set(self.currentSong)
 
        #Favorites
             self.favorites=[]
@@ -685,10 +686,10 @@ class Window(tkinter.Tk):
         #need to change file_path to be ID
         #file Selector
         #FileName Change
-        self.queueSong(file_path)
+        #self.queueSong(file_path)
         i = file_path
 
-        print(file_path)
+        print("THIS IS THE FILEPATH",file_path)
         if i.lower().endswith(".mp3"):
             mp3 = eyed3.load(file_path)
 
@@ -721,23 +722,16 @@ class Window(tkinter.Tk):
                 self.genAlbumIcon(2)
                 trackImage = False
     
-            #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
+            #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage # self directory used to be just i
         self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
             # print(mp3.info.time_secs, end = " | ")
         self.idCounter += 1
         #Get the last added song's index (assumming 0-based indexing)
         new_song_index = len(self.songs) - 1
-        # never reaches the bottom of list
-        # adding new song index makes it pop right away but looks like icon of first
-        # if you click add and next then no error
+  
         song_key = f"{self.songs[new_song_index]['id']}: {self.songs[new_song_index]['Title']}-{self.songs[new_song_index]['Artist']}"
         self.Queue_listbox.insert(tkinter.END,song_key)
         
-      #  if song_key not in self.Queue_listbox.gen(0,tkinter.END):
-      #      self.Queue_listbox.insert(tkinter.END,song_key)
-       # self.loadIntoListbox()
-        # load into listbox doesn't show new song just when next or previous is pressed
-        # ONLY HITING NEXT BUTTON SHOWS ADDED SONG
 
     def deleteSong(self):
         current = self.Queue_listbox.curselection() 
@@ -832,8 +826,10 @@ class Window(tkinter.Tk):
     def ListboxHighlightPlaying(self):
 
         currentSong = self.songQueued
-        print("THE CURRENT SONG",currentSong) 
+        
         for index, song in enumerate(self.songs):
+            print("THE CURRENT SONG",song) 
+            print("THE current index is",index)
             if song["id"]== currentSong["id"]:
                 self.Queue_listbox.selection_clear(0,tkinter.END)
                 self.Queue_listbox.selection_set(index)

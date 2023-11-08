@@ -154,7 +154,7 @@ class Window(tkinter.Tk):
             self.ListboxRemoveOldSongs()
             self.loadSongs()
             self.songScrollbar.update()
-            self.ListboxDirectoryEvent()
+            self.ListboxHighlightPlaying()
 
         tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
         
@@ -468,8 +468,8 @@ class Window(tkinter.Tk):
             event.widget.delete("all")
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
-            self.ListboxNextEvent()
             self.moveSong(1)
+            self.ListboxHighlightPlaying()
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
 
     #generates the previous button
@@ -493,8 +493,8 @@ class Window(tkinter.Tk):
             event.widget.create_rectangle(20*factor,25*factor,30*factor,80*factor,outline="black",fill="white",width=2)
 
             if (self.seek.get() <= 5):
-                self.ListboxPrevEvent()
                 self.moveSong(-1)
+                self.ListboxHighlightPlaying()
             else:
                 self.seek.set(0)
                 self.mixer.music.set_pos(self.seek.get())
@@ -539,18 +539,36 @@ class Window(tkinter.Tk):
 
     #this is the function for the next and previous buttons
     def moveSong(self,direction):
-        if -1 < self.songQueued["id"] + direction < len(self.songs):
-            self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
-        elif self.songQueued["id"] + direction <= -1:
-            self.queueSong(self.songs[len(self.songs)-1]["id"])
-        elif self.songQueued["id"] + direction > len(self.songs)-1:
-            self.queueSong(self.songs[0]["id"])
-
+        currentSong = self.songQueued
+        for index, song in enumerate(self.songs):
+            if song["id"]== currentSong["id"]:
+                break
+        
+        if direction == -1:
+            if index == 0:
+                self.queueSong(self.songs[len(self.songs)-1]["id"])
+            else:
+                self.queueSong(self.songs[index-1]["id"])
+        if direction == 1:
+            if index == len(self.songs)-1:
+                self.queueSong(self.songs[0]["id"])
+            else:
+                self.queueSong(self.songs[index + 1]["id"])
+        #old function
+        #if -1 < self.songQueued["id"] + direction < len(self.songs):
+         #   self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
+    # This is code I tried to add  
+          
+      #  elif self.songQueued["id"] + direction <= -1:
+       #     self.queueSong(self.songs[len(self.songs)-1]["id"])
+       # elif self.songQueued["id"] + direction > len(self.songs)-1:
+       #     self.queueSong(self.songs[0]["id"])
+            
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
-            self.ListboxNextEvent()
             self.moveSong(1)
+            self.ListboxHighlightPlaying()
 
        #Favorites
             self.favorites=[]
@@ -616,7 +634,7 @@ class Window(tkinter.Tk):
     def createListbox(self):
         self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
         self.Queue_listbox = tkinter.Listbox(self.frames["down"], bg = "white", yscrollcommand=self.listbox_scrollbar.set)   
-        self.Queue_listbox.insert(tkinter.END, "SongQueue")
+       # self.Queue_listbox.insert(tkinter.END, "SongQueue")
         self.Queue_listbox.config(yscrollcommand=self.listbox_scrollbar.set)        
         self.listbox_scrollbar.config(command=self.Queue_listbox.yview)
         self.Queue_listbox.grid(row=2, column =3,rowspan=2, sticky ="nsew") 
@@ -626,14 +644,15 @@ class Window(tkinter.Tk):
         #Populates the listbox 
         listbox_items = self.Queue_listbox.get(0,tkinter.END)
         for song in self.songs:
-            song_key = f"{song['Title']}-{song['Artist']}"
+            song_key = f"{song['id']}: {song['Title']}-{song['Artist']}"
             if song_key not in listbox_items:
                self.Queue_listbox.insert(tkinter.END,song_key)
+               
 
     def buttonListbox(self):
      # made the buttons show up 
      self.btnAddToListbox =  tkinter.Button(self.frames["down"], text = "Add",bg="SystemButtonFace", activebackground="Black", fg="Black", command = self.addSong).grid(row=2, column=4)
-     self.btnDeleteToListbox =  tkinter.Button(self.frames["down"], text = "Delete",bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=3, column=4)
+     self.btnDeleteToListbox =  tkinter.Button(self.frames["down"], text = "Delete",bg="SystemButtonFace", activebackground="Black", fg="Black", command = self.deleteSong).grid(row=3, column=4)
      self.btnUpToListbox = tkinter.Button(self.frames["down"], text = "↑",bg="SystemButtonFace", activebackground="Black", fg="Black",command = self.upListbox).grid(row=2, column=2, sticky="nes")
      self.btnDownToListbox = tkinter.Button(self.frames["down"], text = "↓",bg="SystemButtonFace", activebackground="Black", fg="Black",command = self.downListBox).grid(row=3, column=2, sticky="nes")
      self.grid_columnconfigure(0,weight=1)
@@ -644,6 +663,7 @@ class Window(tkinter.Tk):
     #     self.btnAddToListbox = tkinter.Label(self.frames["down"], text = "Add",bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=1, column=5)
     # def myRelease(self):
     def addSong(self):
+        #this function needs some work
         # put the selected song into the queue
         file_path = filedialog.askopenfilename()
 
@@ -652,6 +672,7 @@ class Window(tkinter.Tk):
         #FileName Change
         self.queueSong(file_path)
         i = file_path
+
         print(file_path)
         if i.lower().endswith(".mp3"):
             mp3 = eyed3.load(file_path)
@@ -684,16 +705,44 @@ class Window(tkinter.Tk):
                 # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
                 self.genAlbumIcon(2)
                 trackImage = False
-
+    
             #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
-            self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
+        self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
             # print(mp3.info.time_secs, end = " | ")
-            self.idCounter += 1
-            listbox_items = self.Queue_listbox.get(0,tkinter.END)
-            song_key = f"{self.songs['Title']}-{self.songs['Artist']}"
-            if song_key not in listbox_items:
-                self.Queue_listbox.insert(tkinter.END,song_key)
+        self.idCounter += 1
+        #Get the last added song's index (assumming 0-based indexing)
+        new_song_index = len(self.songs)-1
+        # never reaches the bottom of list
+        # adding new song index makes it pop right away but looks like icon of first
+        # if you click add and next then no error
+        song_key = f"{self.songs[new_song_index]['id']}: {self.songs[new_song_index]['Title']}-{self.songs[new_song_index]['Artist']}"
+        self.Queue_listbox.insert(tkinter.END,song_key)
+       # self.refresh()
+        
+      #  if song_key not in self.Queue_listbox.gen(0,tkinter.END):
+      #      self.Queue_listbox.insert(tkinter.END,song_key)
+       # self.loadIntoListbox()
+        # load into listbox doesn't show new song just when next or previous is pressed
+        # ONLY HITING NEXT BUTTON SHOWS ADDED SONG
 
+    def deleteSong(self):
+        current = self.Queue_listbox.curselection() 
+        current = int(current[0])# convert to int
+
+        if 0 <= current <= self.Queue_listbox.size():
+            item_text = self.Queue_listbox.get(current)
+            self.Queue_listbox.delete(current)
+
+        targetId = item_text[0].split(":",1)[0]
+        
+        for song in self.songs:
+         
+            if str(song["id"]) == targetId:
+                self.songs.remove(song)
+                print(self.songs)
+
+
+    
 
     def upListbox(self):
         current = self.Queue_listbox.curselection() 
@@ -705,14 +754,31 @@ class Window(tkinter.Tk):
 
         if current == 0: # check to see if song already at top
             return 
-        if 0 < current < self.Queue_listbox.size():
+        if 0 < current <= self.Queue_listbox.size():
             item_text = self.Queue_listbox.get(current)
             self.Queue_listbox.delete(current)
         insert_index = current - 1 
 
-        if insert_index < 1:# position 1 is the first songs
-            insert_index = 1
+        if insert_index < 0:# position 1 is the first songs
+            insert_index = 0
+
         self.Queue_listbox.insert(insert_index,item_text)
+       
+        #take text we have split it whereever we see a collun
+        # take the first half of it
+        targetId = item_text[0].split(":",1)[0]
+        
+        for song in self.songs:
+         
+            if str(song["id"]) == targetId:
+                self.songs.remove(song)
+                self.songs.insert(insert_index,song)
+
+
+        #Change song order cuases errors
+        #self.changeSongOrder()
+   # print ("Popped Element",self.songQueued.pop()), Doesn't like this wants a input
+
 
     def downListBox(self):
         current = self.Queue_listbox.curselection() 
@@ -722,30 +788,52 @@ class Window(tkinter.Tk):
 
         current = int(current[0])# convert to int
 
-        if current == self.Queue_listbox.size(): # check to see if song already at top
-            return 
-
-        if 0 < current < self.Queue_listbox.size():
+        if 0 <= current <= self.Queue_listbox.size():
             item_text = self.Queue_listbox.get(current)
             self.Queue_listbox.delete(current)
         insert_index = current + 1 
 
-        if insert_index > self.Queue_listbox.size():# position 1 is the first songs
-            insert_index = self.Queue_listbox.size()
+        if insert_index == self.Queue_listbox.size() -1: # position 1 is the first songs
+            insert_index = self.Queue_listbox.size() -1
+
         self.Queue_listbox.insert(insert_index,item_text)
-        #song_to_move = self.pop(current)
-        #self.songs.insert(insert_index,song_to_move)
+       
+        #take text we have split it whereever we see a collun
+        # take the first half of it
+        targetId = item_text[0].split(":",1)[0]
+        
+        for song in self.songs:
+         
+            if str(song["id"]) == targetId:
+                self.songs.remove(song)
+                self.songs.insert(insert_index,song)
+
+
+
+
     def ListboxRemoveOldSongs(self):
         for song in self.songs:
             self.Queue_listbox.delete(1)
 
+    def ListboxHighlightPlaying(self):
+        currentSong = self.songQueued
+        print("THE CURRENT SONG",currentSong) 
+        for index, song in enumerate(self.songs):
+            if song["id"]== currentSong["id"]:
+                break
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(index)
+        
+
+"""
     def ListboxNextEvent(self):
         global index_of_song
-        index_of_song = index_of_song + 1
+        index_of_song = 1
         if self.Queue_listbox.size() == index_of_song:
-            index_of_song = 1
+            index_of_song = 0
         self.Queue_listbox.selection_clear(0,tkinter.END)
         self.Queue_listbox.selection_set(index_of_song)
+     
 
 
     def ListboxPrevEvent(self):
@@ -760,12 +848,18 @@ class Window(tkinter.Tk):
 
     def ListboxDirectoryEvent(self):
         global index_of_song 
-        index_of_song = 1
+        index_of_song = 0
         self.Queue_listbox.selection_clear(0,tkinter.END)
         self.Queue_listbox.selection_set(index_of_song) 
 
-
-
+    # just made today.
+    def changeSongOrder(self):
+        if len(self.songs)>=3:
+            self.songs[1],self.songs[0] = self.songs[0],self.songs[1]
+            self.queueSong(1)
+        else:
+            print("Not enought songs to change the order")
+    """
 
 # this runs the whole file
 Window().mainloop()

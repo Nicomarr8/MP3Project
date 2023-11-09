@@ -821,21 +821,20 @@ class Window(tkinter.Tk):
 
     def ListboxRemoveOldSongs(self):
         for song in self.songs:
-            self.Queue_listbox.delete(1)
+            self.Queue_listbox.delete(0)
 
     def ListboxHighlightPlaying(self):
 
         currentSong = self.songQueued
         
         for index, song in enumerate(self.songs):
-            print("THE CURRENT SONG",song) 
-            print("THE current index is",index)
+            #print("THE CURRENT SONG",song) 
+            #print("THE current index is",index)
             if song["id"]== currentSong["id"]:
                 self.Queue_listbox.selection_clear(0,tkinter.END)
                 self.Queue_listbox.selection_set(index)
                 break
-       # self.Queue_listbox.selection_clear(0,tkinter.END)
-       # self.Queue_listbox.selection_set(index)
+    
         
 
 """

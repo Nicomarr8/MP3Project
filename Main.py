@@ -308,8 +308,9 @@ class Window(tkinter.Tk):
             #displays information about the currently playing track
             self.tagInfo.config(text=f"{self.songQueued['Title']}   |   {self.songQueued['Artist']}   |   {self.songQueued['Album']}")
             self.seek.config(label="00:00")
+            #For Testing purposes
+            #print("THE DIRECTORY IS ", self.songQueued["Directory"]) 
             #loads and then plays the selected song
-            print("THE DIRECTORY IS ", self.songQueued["Directory"]) 
             self.mixer.music.load(self.songQueued["Directory"])
             self.mixer.music.play()
             if self.paused: self.pause()
@@ -688,8 +689,8 @@ class Window(tkinter.Tk):
         #FileName Change
         #self.queueSong(file_path)
         i = file_path
-
-        print("THIS IS THE FILEPATH",file_path)
+        #For testing purposes
+        #print("THIS IS THE FILEPATH",file_path)
         if i.lower().endswith(".mp3"):
             mp3 = eyed3.load(file_path)
 
@@ -747,7 +748,8 @@ class Window(tkinter.Tk):
          
             if str(song["id"]) == targetId:
                 self.songs.remove(song)
-                print(self.songs)
+               # Prints the song removed for testing/ info
+               # print(self.songs)
 
 
     
@@ -783,9 +785,7 @@ class Window(tkinter.Tk):
                 self.songs.insert(insert_index,song)
 
 
-        #Change song order cuases errors
-        #self.changeSongOrder()
-   # print ("Popped Element",self.songQueued.pop()), Doesn't like this wants a input
+    
 
 
     def downListBox(self):
@@ -806,7 +806,7 @@ class Window(tkinter.Tk):
 
         self.Queue_listbox.insert(insert_index,item_text)
        
-        #take text we have split it whereever we see a collun
+        #take text we have split it where ever we see a collun
         # take the first half of it
         targetId = item_text[0].split(":",1)[0]
         
@@ -828,6 +828,7 @@ class Window(tkinter.Tk):
         currentSong = self.songQueued
         
         for index, song in enumerate(self.songs):
+            # for Testing
             #print("THE CURRENT SONG",song) 
             #print("THE current index is",index)
             if song["id"]== currentSong["id"]:
@@ -836,42 +837,6 @@ class Window(tkinter.Tk):
                 break
     
         
-
-"""
-    def ListboxNextEvent(self):
-        global index_of_song
-        index_of_song = 1
-        if self.Queue_listbox.size() == index_of_song:
-            index_of_song = 0
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song)
-     
-
-
-    def ListboxPrevEvent(self):
-        global index_of_song 
-        index_of_song = index_of_song - 1
-        if  index_of_song == 0:
-            index_of_song = self.Queue_listbox.size() - 1
-            self.Queue_listbox.selection_clear(0,tkinter.END)
-            self.Queue_listbox.selection_set(index_of_song)   
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song) 
-
-    def ListboxDirectoryEvent(self):
-        global index_of_song 
-        index_of_song = 0
-        self.Queue_listbox.selection_clear(0,tkinter.END)
-        self.Queue_listbox.selection_set(index_of_song) 
-
-    # just made today.
-    def changeSongOrder(self):
-        if len(self.songs)>=3:
-            self.songs[1],self.songs[0] = self.songs[0],self.songs[1]
-            self.queueSong(1)
-        else:
-            print("Not enought songs to change the order")
-    """
 
 # this runs the whole file
 Window().mainloop()

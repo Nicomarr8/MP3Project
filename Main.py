@@ -136,7 +136,7 @@ class Window(tkinter.Tk):
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
-        self.scrollbar = tkinter.Scrollbar(self.frames["right"])
+        self.scrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
         self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.text.yview)
 
@@ -261,7 +261,7 @@ class Window(tkinter.Tk):
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
             self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white"))
-            self.text.insert("end","\n")
+            if (i < len(self.songs)-1): self.text.insert("end","\n")
 
     def removeButtons(self):
         self.text.delete("1.0","end")
@@ -300,15 +300,6 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
-    
-    def genScrollBar(self):
-        # Creating a scro1lbar
-        self.songScrollbar = tkinter.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -371,10 +362,7 @@ class Window(tkinter.Tk):
         self.frames["down"].grid_rowconfigure(0, weight=1)
         self.frames["down"].grid_rowconfigure(1, weight=1)
 
-        self.frames["right"].columnconfigure(0,weight=1)
-        self.frames["right"].columnconfigure(1,weight=0)
-        self.frames["right"].rowconfigure(0,weight=1)
-        self.text.grid(row=0,column=0,sticky="nsew")
+        self.text.grid(row=0,column=0,sticky="nsew",pady=(0,20))
         self.scrollbar.grid(row=0,column=1,sticky="nsew")
 
         #scrollbar
@@ -423,7 +411,9 @@ class Window(tkinter.Tk):
                 event.widget.create_rectangle(65*factor+2,10*factor+2,85*factor+2,95*factor+2, outline="black", fill="white", width=2)
         self.canvases["play"].bind("<ButtonPress-1>",onClick)
         #the function for releasing the play button (actually plays)
-        def onRelease(event):
+        def onRelease(event, event2):
+            if event2.widget == self.canvases["play"]:
+                event = event2
             event.widget.configure(relief="raised")
             event.widget.delete("all")
             if not self.paused:
@@ -434,7 +424,11 @@ class Window(tkinter.Tk):
                 event.widget.create_rectangle(23*factor,10*factor,43*factor,95*factor, outline="black", fill="white", width=2)
                 event.widget.create_rectangle(65*factor,10*factor,85*factor,95*factor, outline="black", fill="white", width=2)
                 self.play()
-        self.canvases["play"].bind("<ButtonRelease-1>",onRelease)
+        self.canvases["play"].bind("<ButtonRelease-1>",partial(onRelease,tkinter.Event))
+        fakeEvent = tkinter.Event
+        fakeEvent.widget=self.canvases["play"]
+        self.bind("<space>",partial(onRelease,fakeEvent))
+
 
     #generates the next button
     def genNextButton(self,factor):

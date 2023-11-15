@@ -477,8 +477,8 @@ class Window(tkinter.Tk):
             event.widget.create_polygon([20*factor,25*factor,60*factor,50*factor,20*factor,80*factor],outline="black",fill="white",width=2)
             event.widget.create_rectangle(75*factor,25*factor,85*factor,80*factor,outline="black",fill="white",width=2)
             self.moveSong(1)
-           # self.Queue_listbox.selection_clear(0,tkinter.END)
-           # self.currentSong += 1
+            # self.Queue_listbox.selection_clear(0,tkinter.END)
+            #self.currentSong += 1
             #self.Queue_listbox.selection_set(self.currentSong)
             self.ListboxHighlightPlaying()
         self.canvases["next"].bind("<ButtonRelease-1>",onRelease)
@@ -557,7 +557,7 @@ class Window(tkinter.Tk):
         for index, song in enumerate(self.songs):
             if song["id"]== currentSong["id"]:
                 break
-        
+        #index is where the self.songQueued = the currentSong
         if direction == -1:
             if index == 0:
                 self.queueSong(self.songs[len(self.songs)-1]["id"])
@@ -722,7 +722,8 @@ class Window(tkinter.Tk):
                 # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
                 self.genAlbumIcon(2)
                 trackImage = False
-    
+            # doesn't have error handling
+
             #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage # self directory used to be just i
         self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
             # print(mp3.info.time_secs, end = " | ")
@@ -730,8 +731,13 @@ class Window(tkinter.Tk):
         #Get the last added song's index (assumming 0-based indexing)
         new_song_index = len(self.songs) - 1
   
+        #if you just clear it just going to add up
+        #same list initiially loads on runtime
+        #find a way to clear self.songs and add to queue
+        #make a new Queue
         song_key = f"{self.songs[new_song_index]['id']}: {self.songs[new_song_index]['Title']}-{self.songs[new_song_index]['Artist']}"
         self.Queue_listbox.insert(tkinter.END,song_key)
+        #add song adjust to song currently being played
         
 
     def deleteSong(self):

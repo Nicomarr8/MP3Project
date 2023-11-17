@@ -59,6 +59,7 @@ class Window(tkinter.Tk):
         self.songButtons = []
         self.idCounter = 0
         self.paused = True
+        self.loop = False
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -142,6 +143,8 @@ class Window(tkinter.Tk):
         self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14, "bold"))
         #refresh to put everything in place
 
+        self.loopButton = tkinter.Button(self.frames["down"],text="Enable Loop",command=self.toggleLoop)
+
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
             self.directory = filedialog.askdirectory() 
@@ -190,6 +193,11 @@ class Window(tkinter.Tk):
         if selected_index:
             selected_song = self.filtered_songs[int(selected_index[0])]
             self.queueSong(selected_song["id"])
+
+    def toggleLoop(self):
+        self.loop = not self.loop
+        if self.loop: self.loopButton.config(text="Disable Loop")
+        else: self.loopButton.config(text="Enable Loop")
 
     # give this a button
     def loadSongs(self):
@@ -429,6 +437,7 @@ class Window(tkinter.Tk):
         
         #volume slider
         self.volume.grid(row=1, column=4,columnspan=3,sticky="nsew")
+        self.loopButton.grid(row=5,column=2)
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -564,69 +573,72 @@ class Window(tkinter.Tk):
 
     #this is the function for the next and previous buttons
     def moveSong(self,direction):
-        if -1 < self.songQueued["id"] + direction < len(self.songs):
-            self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
-        elif self.songQueued["id"] + direction <= -1:
-            self.queueSong(self.songs[len(self.songs)-1]["id"])
-        elif self.songQueued["id"] + direction > len(self.songs)-1:
-            self.queueSong(self.songs[0]["id"])
+        if not self.loop:
+            if -1 < self.songQueued["id"] + direction < len(self.songs):
+                self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
+            elif self.songQueued["id"] + direction <= -1:
+                self.queueSong(self.songs[len(self.songs)-1]["id"])
+            elif self.songQueued["id"] + direction > len(self.songs)-1:
+                self.queueSong(self.songs[0]["id"])
+        else:
+            self.queueSong(self.songs[self.songQueued["id"]])
 
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
     #Favorites
-        self.favorites = []
-        self.load_favorites()
+        # self.favorites = []
+        # self.load_favorites()
 
-        # A variable to keep track of which playlist is currently displayed
-        self.showing_favorites = False
-            # Add a separate "Favorites" button in your init method
-        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
-        fav_button.grid(row=5, column=2)
+        # # A variable to keep track of which playlist is currently displayed
+        # self.showing_favorites = False
+        #     # Add a separate "Favorites" button in your init method
+        # fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
+        # fav_button.grid(row=5, column=2)
 
-        def show_favorites(self):
-            if self.showing_favorites:
-                # Display the "All Songs" playlist
-                self.load_songs()
-                self.refresh()
-                self.showing_favorites = False
-            else:
-                # Display the "Favorites" playlist
-                self.load_favorites()
-                self.refresh()
-                self.showing_favorites = True
+        # def show_favorites(self):
+        #     if self.showing_favorites:
+        #         # Display the "All Songs" playlist
+        #         self.load_songs()
+        #         self.refresh()
+        #         self.showing_favorites = False
+        #     else:
+        #         # Display the "Favorites" playlist
+        #         self.load_favorites()
+        #         self.refresh()
+        #         self.showing_favorites = True
 
-        # Define the toggle_favorite method to add/remove songs to/from favorites
-        def toggle_favorite(self, track_id):
-            if track_id in self.favorites:
-                self.favorites.remove(track_id)
-            else:
-                self.favorites.append(track_id)
+        # # Define the toggle_favorite method to add/remove songs to/from favorites
+        # def toggle_favorite(self, track_id):
+        #     if track_id in self.favorites:
+        #         self.favorites.remove(track_id)
+        #     else:
+        #         self.favorites.append(track_id)
             
-            # Save favorites to settings
-            self.save_favorites()
+        #     # Save favorites to settings
+        #     self.save_favorites()
 
-        # Define the update_favorites_playlist method to populate the playlist based on favorites
-        def update_favorites_playlist(self):
-            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-            self.refresh()
+        # # Define the update_favorites_playlist method to populate the playlist based on favorites
+        # def update_favorites_playlist(self):
+        #     self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+        #     self.refresh()
             
-        # Correctly define load_songs method to load all songs
-        def load_songs(self):
-            self.songs = self.all_songs
-            self.refresh()
+        # # Correctly define load_songs method to load all songs
+        # def load_songs(self):
+        #     self.songs = self.all_songs
+        #     self.refresh()
 
-        # Correctly define load_favorites method to load favorite songs
-        def load_favorites(self):
-            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-            self.refresh()
+        # # Correctly define load_favorites method to load favorite songs
+        # def load_favorites(self):
+        #     self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
+        #     self.refresh()
 
-        # Initialize a variable to track which playlist is currently displayed
-        self.showing_favorites = False
+        # # Initialize a variable to track which playlist is currently displayed
+        # self.showing_favorites = False
 
-        # Load all songs initially
-        self.load_songs()
+        # # Load all songs initially
+        # self.load_songs()
 
 # this runs the whole file
 Window().mainloop()

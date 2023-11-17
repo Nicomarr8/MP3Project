@@ -59,7 +59,7 @@ class Window(tkinter.Tk):
         self.songButtons = []
         self.idCounter = 0
         self.paused = True
-        self.showFavorites = False
+        self.favorites_mode = False
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -126,11 +126,11 @@ class Window(tkinter.Tk):
         
         #like
         self.like=[]
-        like_button = tkinter.Button(self.frames["down"], text="Like",command=self.like_song, bg="white", activebackground="grey", fg="black").grid(row=3, column=0)
+        like_button = tkinter.Button(self.frames["down"], text="Like",command=self.like_song, bg="white", activebackground="grey", fg="black").grid(row=2, column=3)
         
         #Favorites
         self.favorites=[]
-        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.display_liked_songs, bg="white", activebackground="grey", fg="black").grid(row=5, column=2)
+        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.display_liked_songs, bg="white", activebackground="grey", fg="black").grid(row=2, column=4)
         
  
         # seek bar
@@ -539,15 +539,28 @@ class Window(tkinter.Tk):
         self.seekUpdater._stop.set
         time.sleep(1)
         self.destroy()
-
-    #this is the function for the next and previous buttons
-    def moveSong(self,direction):
-        if -1 < self.songQueued["id"] + direction < len(self.songs):
-            self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
-        elif self.songQueued["id"] + direction <= -1:
-            self.queueSong(self.songs[len(self.songs)-1]["id"])
-        elif self.songQueued["id"] + direction > len(self.songs)-1:
-            self.queueSong(self.songs[0]["id"])
+# Helper function to get the current index in the favorites list
+    def get_favorite_index(self, song_id):
+        for index, song in enumerate(self.favorites):
+            if song["id"] == song_id:
+                return index
+        return None
+    
+    # This is the function for the next and previous buttons
+    def moveSong(self, direction):
+        if self.favorites_mode:
+            current_index = self.get_favorite_index(self.songQueued["id"])
+            if current_index is not None:
+                new_index = (current_index + direction) % len(self.favorites)
+                new_song_id = self.favorites[new_index]["id"]
+                self.queueSong(new_song_id)
+                
+            else:
+                pass  
+        else:
+            new_index = (self.songQueued["id"] + direction) % len(self.songs)
+            self.queueSong(self.songs[new_index]["id"])  
+                                                                                                        
 
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
@@ -559,26 +572,31 @@ class Window(tkinter.Tk):
         if not self.songQueued["id"] is None:
             song_id = self.songQueued["id"]
 
-        # Check if the song is already in favorites
+            # Check if the song is already in favorites
         for song in self.favorites:
             if song["id"] == song_id:
-                return  # Song is already in favorites
-
-        # Find the song in the list of songs and add it to favorites
+                return ("Song in favorites")
         for song in self.songs:
             if song["id"] == song_id:
                 self.favorites.append(song)
+                self.save_settings(self.current_settings)
                 break
-  
+
     def display_liked_songs(self):
+        self.favorites_mode=not self.favorites_mode
         # Clear the current list
         self.removeButtons()
 
         # Populate the list with liked songs
-        for song in self.favorites:
-            song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
-            songButton = tkinter.Button(self.frames["innerRight"], text=song_info, bg="black", fg="white")
-            songButton.grid(row=len(self.songButtons), column=0)
-            self.songButtons.append(songButton)
-
+        if self.favorites_mode:
+           
+            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorites
+            
+                song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
+                songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")
+                songButton.grid(row=len(self.songButtons), column=0)
+                self.songButtons.append(songButton)
+        else:
+            self.loadSongsIntoFrame() 
+            
 Window().mainloop()

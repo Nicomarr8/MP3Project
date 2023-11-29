@@ -113,6 +113,9 @@ class Window(tkinter.Tk):
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
+        self.scrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.text.yview)
 
         #album default icon
         self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")

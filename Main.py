@@ -60,6 +60,8 @@ class Window(tkinter.Tk):
         self.idCounter = 0
         self.paused = True
         self.favorites_mode = False
+        self.loop = False
+
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -113,6 +115,7 @@ class Window(tkinter.Tk):
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
 
         #album default icon
+        self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
         self.genAlbumIcon(2)
 
         #prev button
@@ -148,8 +151,10 @@ class Window(tkinter.Tk):
         self.volume.set(50)
 
         #tag information stuff
-        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14))
+        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14, "bold"))
         #refresh to put everything in place
+
+        self.loopButton = tkinter.Button(self.frames["down"],text="Enable Loop",command=self.toggleLoop)
 
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
@@ -157,9 +162,9 @@ class Window(tkinter.Tk):
             self.removeButtons()          
             self.refresh() 
             self.loadSongs()
-            self.songScrollbar.update()
+            # self.songScrollbar.update()
 
-        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory).grid(row=5, column=0)
         
         # refresh to put everything in place
         self.refresh()
@@ -200,6 +205,11 @@ class Window(tkinter.Tk):
             selected_song = self.filtered_songs[int(selected_index[0])]
             self.queueSong(selected_song["id"])
 
+    def toggleLoop(self):
+        self.loop = not self.loop
+        if self.loop: self.loopButton.config(text="Disable Loop")
+        else: self.loopButton.config(text="Enable Loop")
+
     # give this a button
     def loadSongs(self):
         self.songs = []
@@ -230,40 +240,50 @@ class Window(tkinter.Tk):
                         mp3 = eyed3.load(self.directory + "\\" + i)
 
                         if mp3:
-                            trackTitle = mp3.tag.title
-                            trackArtist = mp3.tag.artist
-                            trackAlbum = mp3.tag.album
-                            trackRD = mp3.tag.getBestDate()
+                            try:
+                                trackTitle = mp3.tag.title
+                            except:
+                                trackTitle = "Unknown"
+                            try:
+                                trackArtist = mp3.tag.artist
+                            except:
+                                trackArtist = "Unknown"
+                            try:
+                                trackAlbum = mp3.tag.album
+                            except:
+                                trackAlbum = "Unknown"
+                            try:
+                                trackRD = mp3.tag.getBestDate()
+                            except:
+                                trackRD = "Unknown"
                             trackImage = False
                         else:
                             print("Error loading MP3")
-
+                            
                         if trackTitle == None: trackTitle = "Unknown"
                         if trackArtist == None: trackArtist = "Unknown"
                         if trackAlbum == None: trackAlbum = "Unknown"
-                        if trackRD == None: trackRD = "Unknown"
 
                         #this generates the imgs from the mp3s
-                        if mp3.tag.images:
+                        try:
                             for image in mp3.tag.images:
                                 image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
                                 image_file.write(image.image_data)
                                 image_file.close()
                                 trackImage = True
-                        else:
+                        except:
+                            trackImage = False
                             self.canvasAlbum.delete("all")
                             self.canvasAlbum.grid_remove()
                             self.canvasAlbum.grid(row=1,column=1)
-                            # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
                             self.genAlbumIcon(2)
-                            trackImage = False
 
                         #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
                         self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])                
+                self.queueSong(self.songs[0]["id"])              
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
@@ -282,6 +302,9 @@ class Window(tkinter.Tk):
         self.songScrollbar.destroy()
         self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
+        #self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
         # self.songButtons = []
         # pass
 
@@ -296,9 +319,15 @@ class Window(tkinter.Tk):
             #resets and fills the left frame's canvas with the album cover
             self.canvasAlbum.delete("all")
             self.canvasAlbum.grid_remove()
-            self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
-            self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
-            self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            if self.songQueued["Image"]:
+                # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                self.canvasAlbum.config(width=600,height=400)
+                self.canvasAlbum.grid(row=0, column=0, rowspan=3, columnspan=3)
+                self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
+                self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            else:
+                self.genAlbumIcon(2)
+                self.canvasAlbum.grid(row=1, column=1, rowspan=1, columnspan=1)
             #gives the seek abr the right length
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
@@ -365,12 +394,10 @@ class Window(tkinter.Tk):
         self.genScrollBar()
 
         #frames
-        self.rowconfigure(0,weight=1)
-        self.rowconfigure(1,weight=1)
-        self.rowconfigure(2,weight=1)
-        self.rowconfigure(3,weight=1)
-        self.rowconfigure(4,weight=1)
-        self.rowconfigure(5,weight=1)
+        for i in range(8):
+            self.rowconfigure(i,weight=1, uniform='row')
+        for i in range(2):
+            self.columnconfigure(i,weight=1,uniform='column')
         self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew",rowspan=5)
         self.frames["left"].grid_rowconfigure(0, weight=1)
         self.frames["left"].grid_columnconfigure(0, weight=1)
@@ -381,18 +408,19 @@ class Window(tkinter.Tk):
         self.frames["right"].grid(row=0, column=1, padx=0, sticky="nsew",rowspan=5)
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
-        self.frames["down"].grid(row=5, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
+        self.frames["down"].grid(row=5, column=0, rowspan=3,columnspan=2, padx=0, pady=1, sticky="nsew")
         self.songCanvas.grid(row=0,column=0,sticky="nsew")
         self.songCanvas.grid_rowconfigure(0,weight=1)
         self.songCanvas.grid_columnconfigure(0,weight=1)
+        
         for i in range(7):
-            self.frames["down"].grid_columnconfigure(i, weight=1)
+            self.frames["down"].grid_columnconfigure(i, weight=1, uniform='column')
         for i in range(6):
             self.frames["down"].grid_rowconfigure(i, weight=1)
-        #self.frames["down"].grid_rowconfigure(0, weight=1)
-        #self.frames["down"].grid_rowconfigure(1, weight=1)
-        #self.frames["down"].grid_rowconfigure(2, weight=1)
-
+        # self.frames["down"].grid_rowconfigure(0, weight=1)
+        # self.frames["down"].grid_rowconfigure(1, weight=1)
+        # self.frames["down"].grid_rowconfigure(2, weight=1)
+        
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")
 
@@ -407,6 +435,7 @@ class Window(tkinter.Tk):
         
         #volume slider
         self.volume.grid(row=1, column=4,columnspan=3,sticky="nsew")
+        self.loopButton.grid(row=5,column=2)
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -506,7 +535,7 @@ class Window(tkinter.Tk):
     
     #generates the default album icon for a placeholder on startup
     def genAlbumIcon(self,factor):
-        self.canvasAlbum = tkinter.Canvas(self.frames["left"],width=100*factor,height=100*factor,background="grey")
+        self.canvasAlbum.config(width=100*factor,height=100*factor)
         self.canvasAlbum.create_oval(35*factor,20*factor,65*factor,50*factor,outline="black",fill="white",width=2)
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 
@@ -539,6 +568,7 @@ class Window(tkinter.Tk):
         self.seekUpdater._stop.set
         time.sleep(1)
         self.destroy()
+        
 # Helper function to get the current index in the favorites list
     def get_favorite_index(self, song_id):
         for index, song in enumerate(self.favorites):
@@ -560,13 +590,11 @@ class Window(tkinter.Tk):
         else:
             new_index = (self.songQueued["id"] + direction) % len(self.songs)
             self.queueSong(self.songs[new_index]["id"])  
-                                                                                                        
 
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
-
 
     def like_song(self):
         if not self.songQueued["id"] is None:
@@ -599,4 +627,5 @@ class Window(tkinter.Tk):
         else:
             self.loadSongsIntoFrame() 
             
+# this runs the whole file
 Window().mainloop()

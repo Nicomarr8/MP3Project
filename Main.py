@@ -1006,11 +1006,15 @@ class Window(tkinter.Tk):
             item_text = self.Queue_listbox.get(current)
             self.Queue_listbox.delete(current)
         insert_index = current - 1 
+        select_index = current + 1
 
         if insert_index < 0:# position 1 is the first songs
             insert_index = 0
 
         self.Queue_listbox.insert(insert_index,item_text)
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(insert_index)
+
        
         #take text we have split it whereever we see a collun
         # take the first half of it
@@ -1043,6 +1047,8 @@ class Window(tkinter.Tk):
             insert_index = self.Queue_listbox.size() -1
 
         self.Queue_listbox.insert(insert_index,item_text)
+        self.Queue_listbox.selection_clear(0,tkinter.END)
+        self.Queue_listbox.selection_set(insert_index)
        
         #take text we have split it where ever we see a collun
         # take the first half of it

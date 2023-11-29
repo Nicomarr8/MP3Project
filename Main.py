@@ -348,15 +348,6 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
-    
-    def genScrollBar(self):
-        # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -391,8 +382,6 @@ class Window(tkinter.Tk):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
 
-        self.genScrollBar()
-
         #frames
         for i in range(8):
             self.rowconfigure(i,weight=1, uniform='row')
@@ -420,6 +409,9 @@ class Window(tkinter.Tk):
         # self.frames["down"].grid_rowconfigure(0, weight=1)
         # self.frames["down"].grid_rowconfigure(1, weight=1)
         # self.frames["down"].grid_rowconfigure(2, weight=1)
+
+        self.text.grid(row=0,column=0,sticky="nsew",pady=(0,20))
+        self.scrollbar.grid(row=0,column=1,sticky="nsew")
         
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")

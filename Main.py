@@ -334,8 +334,6 @@ class Window(tkinter.Tk):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
 
-        #self.genScrollBar()
-
         #frames
         self.rowconfigure(0,weight=1)
         self.rowconfigure(1,weight=1)

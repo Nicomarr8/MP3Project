@@ -291,11 +291,8 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
-            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-            songButton.grid(row=i, column=0)
-            self.songButtons.append(songButton)
-        #self.songs = [song for song in self.songs if song in self.favorites]
+            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white"))
+            if (i < len(self.songs)-1): self.text.insert("end","\n")
 
     def removeButtons(self):
         self.songCanvas.delete("all")

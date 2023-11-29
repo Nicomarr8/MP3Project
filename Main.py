@@ -582,6 +582,7 @@ class Window(tkinter.Tk):
                 self.save_settings(self.current_settings)
                 break
 
+    # Display list of favorited songs when the 'Favorites' button is clicked
     def display_liked_songs(self):
         self.favorites_mode=not self.favorites_mode
         # Clear the current list
@@ -590,8 +591,7 @@ class Window(tkinter.Tk):
         # Populate the list with liked songs
         if self.favorites_mode:
            
-            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorites
-            
+            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorite
                 song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
                 songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")
                 songButton.grid(row=len(self.songButtons), column=0)

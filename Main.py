@@ -131,7 +131,7 @@ class Window(tkinter.Tk):
         self.seekUpdater.start()
         self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
         self.mixer.init()    
-
+        self.shuffle_dict = {}
         # Volume slider
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
@@ -192,11 +192,15 @@ class Window(tkinter.Tk):
         if selected_index:
             selected_song = self.filtered_songs[int(selected_index[0])]
             self.queueSong(selected_song["id"])
+        
     def shuffle_songs(self):
         random.shuffle(self.songs)
+        self.shuffle_dict = {i: song["id"] for i, song in enumerate(self.songs)}
         self.updateSongButtons()
         if self.songs:
             self.queueSong(self.songs[0]["id"])
+        
+            
     def updateSongButtons(self):
         for i in range(len(self.songButtons)):
             self.songButtons[i].grid_forget()  # Remove the existing button
@@ -550,12 +554,19 @@ class Window(tkinter.Tk):
 
     #this is the function for the next and previous buttons
     def moveSong(self,direction):
-        if -1 < self.songQueued["id"] + direction < len(self.songs):
-            self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
-        elif self.songQueued["id"] + direction <= -1:
-            self.queueSong(self.songs[len(self.songs)-1]["id"])
-        elif self.songQueued["id"] + direction > len(self.songs)-1:
-            self.queueSong(self.songs[0]["id"])
+        if self.shuffle_dict:
+            current_index = self.songs.index(self.songQueued)
+            new_index = (current_index + direction) % len(self.songs)
+            song_id_to_play = self.shuffle_dict[new_index]
+            self.queueSong(song_id_to_play)
+        else:
+        # The original logic if shuffle_dict is not available
+            if -1 < self.songQueued["id"] + direction < len(self.songs):
+                self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
+            elif self.songQueued["id"] + direction <= -1:
+                self.queueSong(self.songs[len(self.songs) - 1]["id"])
+            elif self.songQueued["id"] + direction > len(self.songs) - 1:
+                self.queueSong(self.songs[0]["id"])
 
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")

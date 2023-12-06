@@ -58,6 +58,9 @@ class Window(tkinter.Tk):
         self.songButtons = []
         self.idCounter = 0
         self.paused = True
+        self.favorites_mode = False
+        self.loop = False
+
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
             "visual_theme": "default",
@@ -111,6 +114,7 @@ class Window(tkinter.Tk):
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
 
         #album default icon
+        self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
         self.genAlbumIcon(2)
 
         #prev button
@@ -121,7 +125,16 @@ class Window(tkinter.Tk):
 
         #next button
         self.genNextButton(0.4)
-
+        
+        #like
+        self.like=[]
+        like_button = tkinter.Button(self.frames["down"], text="Like",command=self.like_song, bg="white", activebackground="grey", fg="black").grid(row=2, column=3)
+        
+        #Favorites
+        self.favorites=[]
+        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.display_liked_songs, bg="white", activebackground="grey", fg="black").grid(row=2, column=4)
+        
+ 
         # seek bar
         self.seek= tkinter.Scale(self.frames["down"], from_=0, to =0, orient="horizontal", label="00:00", showvalue=0, command=self.moveSeek)
         self.seek.bind("<ButtonRelease-1>",self.seekTo)
@@ -141,8 +154,10 @@ class Window(tkinter.Tk):
         shuffle_button.grid(row=5, column=1)
 
         #tag information stuff
-        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14))
+        self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14, "bold"))
         #refresh to put everything in place
+
+        self.loopButton = tkinter.Button(self.frames["down"],text="Enable Loop",command=self.toggleLoop)
 
         # Allows the user to select a directory and automatically update the list in the application
         def select_directory():
@@ -150,16 +165,22 @@ class Window(tkinter.Tk):
             self.removeButtons()          
             self.refresh() 
             self.loadSongs()
-            self.songScrollbar.update()
+            # self.songScrollbar.update()
 
-        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory,bg="SystemButtonFace", activebackground="Black", fg="Black").grid(row=5, column=0)
+        tkinter.Button(self.frames["down"], text = "Select Directory", command = select_directory).grid(row=5, column=0)
         
         # refresh to put everything in place
         self.refresh()
         self.loadSongs()
+        # Favorites
+        self.favorites=[]
+        #self.load_favorites()
+        #self.load_songs()
+        self.refresh ()
 
-    #there should be a set directory button for the whole application
-# Search bar and search button
+
+        #there should be a set directory button for the whole application
+        # Search bar and search button
         self.search_entry = tkinter.Entry(self.frames["down"], width=20)
         self.search_entry.grid(row=0, column=7, padx=5)
         self.search_button = tkinter.Button(self.frames["down"], text="Search", command=self.search_song)
@@ -206,6 +227,12 @@ class Window(tkinter.Tk):
             self.songButtons[i].grid_forget()  # Remove the existing button
         self.songButtons.clear()
         self.loadSongsIntoFrame()        
+
+    def toggleLoop(self):
+        self.loop = not self.loop
+        if self.loop: self.loopButton.config(text="Disable Loop")
+        else: self.loopButton.config(text="Enable Loop")
+          
     # give this a button
     def loadSongs(self):
         self.songs = []
@@ -236,40 +263,50 @@ class Window(tkinter.Tk):
                         mp3 = eyed3.load(self.directory + "\\" + i)
 
                         if mp3:
-                            trackTitle = mp3.tag.title
-                            trackArtist = mp3.tag.artist
-                            trackAlbum = mp3.tag.album
-                            trackRD = mp3.tag.getBestDate()
+                            try:
+                                trackTitle = mp3.tag.title
+                            except:
+                                trackTitle = "Unknown"
+                            try:
+                                trackArtist = mp3.tag.artist
+                            except:
+                                trackArtist = "Unknown"
+                            try:
+                                trackAlbum = mp3.tag.album
+                            except:
+                                trackAlbum = "Unknown"
+                            try:
+                                trackRD = mp3.tag.getBestDate()
+                            except:
+                                trackRD = "Unknown"
                             trackImage = False
                         else:
                             print("Error loading MP3")
-
-                        # if trackTitle == None: trackTitle = "Unknown"
-                        # if trackArtist == None: trackArtist = "Unknown"
-                        # if trackAlbum == None: trackAlbum = "Unknown"
-                        # if trackRD == None: trackRD = "Unknown"
+                            
+                        if trackTitle == None: trackTitle = "Unknown"
+                        if trackArtist == None: trackArtist = "Unknown"
+                        if trackAlbum == None: trackAlbum = "Unknown"
 
                         #this generates the imgs from the mp3s
-                        if mp3.tag.images:
+                        try:
                             for image in mp3.tag.images:
                                 image_file = open(f"..\\imgs\\{self.idCounter} - {trackTitle} - {trackArtist}().jpg","wb+")
                                 image_file.write(image.image_data)
                                 image_file.close()
                                 trackImage = True
-                        else:
+                        except:
+                            trackImage = False
                             self.canvasAlbum.delete("all")
                             self.canvasAlbum.grid_remove()
                             self.canvasAlbum.grid(row=1,column=1)
-                            # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
                             self.genAlbumIcon(2)
-                            trackImage = False
 
                         #This append function prevents the program from loading mp3 files that have no image, because each ID in the array must include a value for trackImage
                         self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":i,"Length":mp3.info.time_secs})
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])                
+                self.queueSong(self.songs[0]["id"])              
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
@@ -289,13 +326,16 @@ class Window(tkinter.Tk):
             songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
             songButton.grid(row=i, column=0)
             self.songButtons.append(songButton)
-    
-    
+        #self.songs = [song for song in self.songs if song in self.favorites]
+
     def removeButtons(self):
         self.songCanvas.delete("all")
         self.songScrollbar.destroy()
         self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
         self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
+        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
+        #self.songScrollbar.config(command=self.songCanvas.yview)
+        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
         # self.songButtons = []
         # pass
 
@@ -310,9 +350,15 @@ class Window(tkinter.Tk):
             #resets and fills the left frame's canvas with the album cover
             self.canvasAlbum.delete("all")
             self.canvasAlbum.grid_remove()
-            self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
-            self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
-            self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            if self.songQueued["Image"]:
+                # self.canvasAlbum.pack(side = "left", fill = "both", expand = True ,padx=2,pady=2)
+                self.canvasAlbum.config(width=600,height=400)
+                self.canvasAlbum.grid(row=0, column=0, rowspan=3, columnspan=3)
+                self.albumimg = ImageTk.PhotoImage(Image.open(f"..\\imgs\\{self.songQueued['id']} - {self.songQueued['Title']} - {self.songQueued['Artist']}().jpg"))
+                self.canvasAlbum.create_image(0, 0, anchor="nw", image=self.albumimg)
+            else:
+                self.genAlbumIcon(2)
+                self.canvasAlbum.grid(row=1, column=1, rowspan=1, columnspan=1)
             #gives the seek abr the right length
             self.seek.config(to=self.songQueued["Length"])
             #sets the seek bar back to 0
@@ -379,12 +425,10 @@ class Window(tkinter.Tk):
         self.genScrollBar()
 
         #frames
-        self.rowconfigure(0,weight=1)
-        self.rowconfigure(1,weight=1)
-        self.rowconfigure(2,weight=1)
-        self.rowconfigure(3,weight=1)
-        self.rowconfigure(4,weight=1)
-        self.rowconfigure(5,weight=1)
+        for i in range(8):
+            self.rowconfigure(i,weight=1, uniform='row')
+        for i in range(2):
+            self.columnconfigure(i,weight=1,uniform='column')
         self.frames["left"].grid(row=0, column=0, padx=1, pady=1,sticky="nsew",rowspan=5)
         self.frames["left"].grid_rowconfigure(0, weight=1)
         self.frames["left"].grid_columnconfigure(0, weight=1)
@@ -395,16 +439,19 @@ class Window(tkinter.Tk):
         self.frames["right"].grid(row=0, column=1, padx=0, sticky="nsew",rowspan=5)
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
-        self.frames["down"].grid(row=5, column=0,columnspan=2, padx=0, pady=1, sticky="nsew")
+        self.frames["down"].grid(row=5, column=0, rowspan=3,columnspan=2, padx=0, pady=1, sticky="nsew")
         self.songCanvas.grid(row=0,column=0,sticky="nsew")
         self.songCanvas.grid_rowconfigure(0,weight=1)
         self.songCanvas.grid_columnconfigure(0,weight=1)
+        
         for i in range(7):
-            self.frames["down"].grid_columnconfigure(i, weight=1)
-        self.frames["down"].grid_rowconfigure(0, weight=1)
-        self.frames["down"].grid_rowconfigure(1, weight=1)
-        self.frames["down"].grid_rowconfigure(2, weight=1)
-
+            self.frames["down"].grid_columnconfigure(i, weight=1, uniform='column')
+        for i in range(6):
+            self.frames["down"].grid_rowconfigure(i, weight=1)
+        # self.frames["down"].grid_rowconfigure(0, weight=1)
+        # self.frames["down"].grid_rowconfigure(1, weight=1)
+        # self.frames["down"].grid_rowconfigure(2, weight=1)
+        
         #scrollbar
         self.songScrollbar.grid(row=0, column=1, sticky="nsew")
 
@@ -419,6 +466,7 @@ class Window(tkinter.Tk):
         
         #volume slider
         self.volume.grid(row=1, column=4,columnspan=3,sticky="nsew")
+        self.loopButton.grid(row=5,column=2)
 
         #makes all of the frames expand to fit the window
         #parent window
@@ -518,7 +566,7 @@ class Window(tkinter.Tk):
     
     #generates the default album icon for a placeholder on startup
     def genAlbumIcon(self,factor):
-        self.canvasAlbum = tkinter.Canvas(self.frames["left"],width=100*factor,height=100*factor,background="grey")
+        self.canvasAlbum.config(width=100*factor,height=100*factor)
         self.canvasAlbum.create_oval(35*factor,20*factor,65*factor,50*factor,outline="black",fill="white",width=2)
         self.canvasAlbum.create_polygon([30*factor,60*factor,70*factor,60*factor,80*factor,70*factor,80*factor,80*factor,20*factor,80*factor,20*factor,70*factor,30*factor,60*factor],outline="black",fill="white",width=2)
 
@@ -551,79 +599,95 @@ class Window(tkinter.Tk):
         self.seekUpdater._stop.set
         time.sleep(1)
         self.destroy()
-
-    #this is the function for the next and previous buttons
-    def moveSong(self,direction):
-        if self.shuffle_dict:
-            current_index = self.songs.index(self.songQueued)
-            new_index = (current_index + direction) % len(self.songs)
-            song_id_to_play = self.shuffle_dict[new_index]
-            self.queueSong(song_id_to_play)
+        
+# Helper function to get the current index in the favorites list
+    def get_favorite_index(self, song_id):
+        for index, song in enumerate(self.favorites):
+            if song["id"] == song_id:
+                return index
+        return None
+    
+    # This is the function for the next and previous buttons
+    def moveSong(self, direction):
+        if self.favorites_mode:
+            current_index = self.get_favorite_index(self.songQueued["id"])
+            if current_index is not None:
+                new_index = (current_index + direction) % len(self.favorites)
+                new_song_id = self.favorites[new_index]["id"]
+                self.queueSong(new_song_id)
+                
+            else:
+                pass  
         else:
-        # The original logic if shuffle_dict is not available
-            if -1 < self.songQueued["id"] + direction < len(self.songs):
-                self.queueSong(self.songs[self.songQueued["id"] + direction]["id"])
-            elif self.songQueued["id"] + direction <= -1:
-                self.queueSong(self.songs[len(self.songs) - 1]["id"])
-            elif self.songQueued["id"] + direction > len(self.songs) - 1:
-                self.queueSong(self.songs[0]["id"])
+            new_index = (self.songQueued["id"] + direction) % len(self.songs)
+            self.queueSong(self.songs[new_index]["id"])  
 
     def moveSeek(self, event):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
-    #Favorites
-        self.favorites = []
-        self.load_favorites()
+                
+    def toggle_favorite(self, track_id):
+        if track_id in self.favorites:
+            self.favorites.remove(track_id)
+        else:
+            self.favorites.append(track_id)
 
-        # A variable to keep track of which playlist is currently displayed
-        self.showing_favorites = False
-            # Add a separate "Favorites" button in your init method
-        fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
-        fav_button.grid(row=5, column=2)
+        # Update the "Favorites" playlist in the UI.
+        self.update_favorites_playlist()
 
-        def show_favorites(self):
-            if self.showing_favorites:
-                # Display the "All Songs" playlist
-                self.load_songs()
-                self.refresh()
-                self.showing_favorites = False
-            else:
-                # Display the "Favorites" playlist
-                self.load_favorites()
-                self.refresh()
-                self.showing_favorites = True
+        # Save favorites to settings.
+        #self.save_favorites()
 
-        # Define the toggle_favorite method to add/remove songs to/from favorites
-        def toggle_favorite(self, track_id):
-            if track_id in self.favorites:
-                self.favorites.remove(track_id)
-            else:
-                self.favorites.append(track_id)
+    def update_favorites_playlist(self):
+        # Clear the current favorites playlist (if any).
+        self.frames["favorites"].destroy()
+
+        # Create a new frame for the "Favorites" playlist.
+        self.frames["favorites"] = tkinter.Frame(self, bg="white")
+        self.frames["favorites"].grid(row=0, column=1, padx=1, pady=1, sticky="nsew", rowspan=5)
+        self.frames["favorites"].grid_rowconfigure(0, weight=1)
+        self.frames["favorites"].grid_columnconfigure(0, weight=1)
+
+        # Add a label to the "Favorites" playlist.
+        tkinter.Label(self.frames["favorites"], text="Favorites Playlist", bg="white").grid(row=0, column=0, padx=5, pady=5)
+
+        # Add favorited tracks to the "Favorites" playlist.
+        for track in self.songs:
+            if track["id"] in self.favorites:
+                tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
+                            command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
+
+    def like_song(self):
+        if not self.songQueued["id"] is None:
+            song_id = self.songQueued["id"]
+
+            # Check if the song is already in favorites
+        for song in self.favorites:
+            if song["id"] == song_id:
+                return ("Song in favorites")
+        for song in self.songs:
+            if song["id"] == song_id:
+                self.favorites.append(song)
+                self.save_settings(self.current_settings)
+                break
+
+    # Display list of favorited songs when the 'Favorites' button is clicked
+    def display_liked_songs(self):
+        self.favorites_mode=not self.favorites_mode
+        # Clear the current list
+        self.removeButtons()
+
+        # Populate the list with liked songs
+        if self.favorites_mode:
+        
+            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorite
+                song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
+                songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")
+                songButton.grid(row=len(self.songButtons), column=0)
+                self.songButtons.append(songButton)
+        else:
+            self.loadSongsIntoFrame() 
             
-            # Save favorites to settings
-            self.save_favorites()
-
-        # Define the update_favorites_playlist method to populate the playlist based on favorites
-        def update_favorites_playlist(self):
-            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-            self.refresh()
-            
-        # Correctly define load_songs method to load all songs
-        def load_songs(self):
-            self.songs = self.all_songs
-            self.refresh()
-
-        # Correctly define load_favorites method to load favorite songs
-        def load_favorites(self):
-            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-            self.refresh()
-
-        # Initialize a variable to track which playlist is currently displayed
-        self.showing_favorites = False
-
-        # Load all songs initially
-        self.load_songs()
-
 # this runs the whole file
 Window().mainloop()

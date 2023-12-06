@@ -169,9 +169,15 @@ class Window(tkinter.Tk):
         # refresh to put everything in place
         self.refresh()
         self.loadSongs()
+        # Favorites
+        self.favorites=[]
+        #self.load_favorites()
+        #self.load_songs()
+        self.refresh ()
 
-    #there should be a set directory button for the whole application
-# Search bar and search button
+
+        #there should be a set directory button for the whole application
+        # Search bar and search button
         self.search_entry = tkinter.Entry(self.frames["down"], width=20)
         self.search_entry.grid(row=0, column=7, padx=5)
         self.search_button = tkinter.Button(self.frames["down"], text="Search", command=self.search_song)
@@ -595,6 +601,37 @@ class Window(tkinter.Tk):
         self.seek.config(label=f"{int(self.seek.get() / 60):02d}:{int((float(self.seek.get() / 60) - int(self.seek.get() / 60)) * 60 ):02d}")
         if self.seek.get() == int(self.songQueued["Length"]) and not self.paused:
             self.moveSong(1)
+                
+    def toggle_favorite(self, track_id):
+        if track_id in self.favorites:
+            self.favorites.remove(track_id)
+        else:
+            self.favorites.append(track_id)
+
+        # Update the "Favorites" playlist in the UI.
+        self.update_favorites_playlist()
+
+        # Save favorites to settings.
+        #self.save_favorites()
+
+    def update_favorites_playlist(self):
+        # Clear the current favorites playlist (if any).
+        self.frames["favorites"].destroy()
+
+        # Create a new frame for the "Favorites" playlist.
+        self.frames["favorites"] = tkinter.Frame(self, bg="white")
+        self.frames["favorites"].grid(row=0, column=1, padx=1, pady=1, sticky="nsew", rowspan=5)
+        self.frames["favorites"].grid_rowconfigure(0, weight=1)
+        self.frames["favorites"].grid_columnconfigure(0, weight=1)
+
+        # Add a label to the "Favorites" playlist.
+        tkinter.Label(self.frames["favorites"], text="Favorites Playlist", bg="white").grid(row=0, column=0, padx=5, pady=5)
+
+        # Add favorited tracks to the "Favorites" playlist.
+        for track in self.songs:
+            if track["id"] in self.favorites:
+                tkinter.Button(self.frames["favorites"], text=f"Title: {track['Title']} | Artist: {track['Artist']} | Album: {track['Album']}",
+                            command=partial(self.queueSong, track["id"]), bg="black", activebackground="grey", fg="white").grid(row=track["id"] + 1, column=0)
 
     def like_song(self):
         if not self.songQueued["id"] is None:
@@ -618,7 +655,7 @@ class Window(tkinter.Tk):
 
         # Populate the list with liked songs
         if self.favorites_mode:
-           
+        
             for song in self.favorites:  # Make sure to iterate over liked_songs, not favorite
                 song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
                 songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")

@@ -34,16 +34,6 @@ from PIL import ImageTk,Image
   # Save the updated settings
   #save_settings(current_settings)
 
-new_directory = "MP3_App"
-home_directory = os.path.expanduser ("~")
-music_directory = os.path.join(home_directory, "Music")
-
-music_directory_path = os.path.join(music_directory, new_directory)
-#initialize it to 0 
-
-if not os.path.exists(music_directory_path): 
-    os.makedirs(music_directory_path)
-
 class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
@@ -54,7 +44,6 @@ class Window(tkinter.Tk):
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
-        self.directory = music_directory_path
         self.songs = []
         self.songButtons = []
         self.idCounter = 0
@@ -62,6 +51,33 @@ class Window(tkinter.Tk):
         self.currentSong = 0
         self.favorites_mode = False
         self.loop = False
+
+        new_directory = "MP3_App"
+        home_directory = os.path.expanduser ("~")
+        music_directory = os.path.join(home_directory, "Music")
+
+        music_directory_path = os.path.join(music_directory, new_directory)
+        self.directory = music_directory_path
+        #initialize it to 0 
+
+        if not os.path.exists(music_directory_path): 
+            os.makedirs(music_directory_path)
+
+        file_name = "SongDirectory.txt"
+        text_directory = os.path.join(music_directory_path, file_name)
+
+        # Check if the file exists in the directory
+        if os.path.exists(text_directory) and os.path.isfile(text_directory):
+            # Read the content of the file to determine the new directory
+            with open(text_directory, 'r') as text:
+                self.directory = text.read().strip()  # Store the content in 'self.directory'
+        else:
+            # If the file doesn't exist, set 'self.directory' to 'music_directory_path'
+            self.directory = music_directory_path
+            # Create a new SongDirectory.txt file and write 'self.directory' to it
+            with open(text_directory, 'w') as text:
+                text.write(self.directory)
+                text.close()
 
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
@@ -170,6 +186,16 @@ class Window(tkinter.Tk):
             self.directory = filedialog.askdirectory() 
             self.removeButtons()          
             self.refresh() 
+
+            if os.path.exists(text_directory) and os.path.isfile(text_directory):
+                # Clear the content of the file and write the new string
+                with open(text_directory, 'w') as text:
+                    text.write(self.directory)
+            else:
+                # If the file doesn't exist, create a new file and write the string
+                with open(text_directory, 'w') as text:
+                    text.write(self.directory)
+
             self.ListboxRemoveOldSongs()
             self.loadSongs()
 
@@ -318,7 +344,7 @@ class Window(tkinter.Tk):
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])              
+                if self.songs: self.queueSong(self.songs[0]["id"])              
         else:
             #needs error handling eventually
             print("File doesn't exist \n")

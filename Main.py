@@ -5,8 +5,7 @@
 # optimization?
 # finding its own directory
 
-
-import time, tkinter, json, eyed3, pygame, os, threading
+import time, tkinter, json, eyed3, pygame, os, threading, random
 from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
@@ -145,10 +144,14 @@ class Window(tkinter.Tk):
         self.seekUpdater.start()
         self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
         self.mixer.init()    
-
+        self.shuffle_dict = {}
         # Volume slider
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
+
+        # Add a "Shuffle" button to your GUI
+        shuffle_button = tkinter.Button(self.frames["down"], text="Shuffle", command=self.shuffle_songs)
+        shuffle_button.grid(row=5, column=1)
 
         #tag information stuff
         self.tagInfo = tkinter.Label(self.frames["down"],font=("Roboto Mono",14, "bold"))
@@ -210,12 +213,26 @@ class Window(tkinter.Tk):
         if selected_index:
             selected_song = self.filtered_songs[int(selected_index[0])]
             self.queueSong(selected_song["id"])
+        
+    def shuffle_songs(self):
+        random.shuffle(self.songs)
+        self.shuffle_dict = {i: song["id"] for i, song in enumerate(self.songs)}
+        self.updateSongButtons()
+        if self.songs:
+            self.queueSong(self.songs[0]["id"])
+        
+            
+    def updateSongButtons(self):
+        for i in range(len(self.songButtons)):
+            self.songButtons[i].grid_forget()  # Remove the existing button
+        self.songButtons.clear()
+        self.loadSongsIntoFrame()        
 
     def toggleLoop(self):
         self.loop = not self.loop
         if self.loop: self.loopButton.config(text="Disable Loop")
         else: self.loopButton.config(text="Enable Loop")
-
+          
     # give this a button
     def loadSongs(self):
         self.songs = []
@@ -293,6 +310,14 @@ class Window(tkinter.Tk):
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
+        # Load songs into the right frame without shuffling
+        self.loadSongsIntoFrame()
+
+        # Queue the first song
+        if self.songs:
+            self.queueSong(self.songs[0]["id"])    
+        
+   
 
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):

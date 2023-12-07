@@ -130,7 +130,9 @@ class Window(tkinter.Tk):
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
-
+        self.scrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(command=self.text.yview)
         #album default icon
         self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
         self.genAlbumIcon(2)
@@ -199,7 +201,6 @@ class Window(tkinter.Tk):
             self.ListboxRemoveOldSongs()
             self.loadSongs()
 
-            self.songScrollbar.update()
             self.ListboxHighlightPlaying()
             #self.Queue_listbox.selection_clear(0,tkinter.END)
             #self.currentSong = 0
@@ -360,20 +361,13 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
-            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-            songButton.grid(row=i, column=0)
-            self.songButtons.append(songButton)
+            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white"))
+            if (i < len(self.songs)-1): self.text.insert("end","\n")
+
         #self.songs = [song for song in self.songs if song in self.favorites]
 
     def removeButtons(self):
-        self.songCanvas.delete("all")
-        self.songScrollbar.destroy()
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
-        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
-        #self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
+        self.text.delete(1.0,"end")
         # self.songButtons = []
         # pass
 
@@ -420,15 +414,6 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
-    
-    def genScrollBar(self):
-        # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -463,8 +448,6 @@ class Window(tkinter.Tk):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
 
-        self.genScrollBar()
-
         #frames
         for i in range(8):
             self.rowconfigure(i,weight=1, uniform='row')
@@ -481,18 +464,14 @@ class Window(tkinter.Tk):
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
         self.frames["down"].grid(row=5, column=0, rowspan=3,columnspan=2, padx=0, pady=1, sticky="nsew")
-        self.songCanvas.grid(row=0,column=0,sticky="nsew")
-        self.songCanvas.grid_rowconfigure(0,weight=1)
-        self.songCanvas.grid_columnconfigure(0,weight=1)
         
         for i in range(7):
             self.frames["down"].grid_columnconfigure(i, weight=1,uniform="column")
         for i in range(6):
             self.frames["down"].grid_rowconfigure(i, weight=1)
 
-        
-        #scrollbar
-        self.songScrollbar.grid(row=0, column=1, sticky="nsew")
+        self.text.grid(row=0,column=0,sticky="nsew",pady=(0,20))
+        self.scrollbar.grid(row=0,column=1,sticky="nsew")
 
         #tag info
         self.tagInfo.grid(row=0,column=0,columnspan=7, sticky="nsew")
@@ -1185,11 +1164,9 @@ class Window(tkinter.Tk):
         # Populate the list with liked songs
         if self.favorites_mode:
         
-            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorite
-                song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
-                songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")
-                songButton.grid(row=len(self.songButtons), column=0)
-                self.songButtons.append(songButton)
+            for i in range(len(self.favorites)):
+                self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.favorites[i]['Title']} | Artist: {self.favorites[i]['Artist']} | Album: {self.favorites[i]['Album']}",command=partial(self.queueSong, self.favorites[i]["id"]), bg="black", activebackground="grey", fg="white"))
+                if (i < len(self.favorites)-1): self.text.insert("end","\n")
         else:
             self.loadSongsIntoFrame() 
             

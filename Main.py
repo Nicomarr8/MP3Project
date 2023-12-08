@@ -122,16 +122,16 @@ class Window(tkinter.Tk):
         self.website = self.current_settings["about_info"]["website"]
 
         #frames
-        self.frames["left"] = tkinter.Frame(self,bg = "white")
-        self.frames["right"] = tkinter.Frame(self)
-        self.frames["down"] = tkinter.Frame(self,bg = "#7aa7f0")
+        self.frames["left"] = tkinter.Frame(self,bg = "#aaaaaa")
+        self.frames["right"] = tkinter.Frame(self,bg = "#aaaaaa")
+        self.frames["down"] = tkinter.Frame(self,bg = "#5a87d0")
 
         #stylize the scrollbar with witchcraft and wizardry
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
         self.scrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set)
+        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set,bg = "#aaaaaa")
         self.scrollbar.config(command=self.text.yview)
         #album default icon
         self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
@@ -361,7 +361,7 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white"))
+            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="white", activebackground="grey", fg="black"))
             if (i < len(self.songs)-1): self.text.insert("end","\n")
 
         #self.songs = [song for song in self.songs if song in self.favorites]
@@ -628,6 +628,9 @@ class Window(tkinter.Tk):
 
     #this is the function for the next and previous buttons
     def moveSong(self,direction):
+        if self.loop:
+            self.queueSong(self.songQueued["id"])
+            return
         currentSong = self.songQueued
         for index, song in enumerate(self.songs):
             if song["id"]== currentSong["id"]:
@@ -638,7 +641,7 @@ class Window(tkinter.Tk):
                 self.queueSong(self.songs[len(self.songs)-1]["id"])
             else:
                 self.queueSong(self.songs[index-1]["id"])
-        if direction == 1:
+        elif direction == 1:
             if index == len(self.songs)-1:
                 self.queueSong(self.songs[0]["id"])
             else:
@@ -1165,7 +1168,7 @@ class Window(tkinter.Tk):
         if self.favorites_mode:
         
             for i in range(len(self.favorites)):
-                self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.favorites[i]['Title']} | Artist: {self.favorites[i]['Artist']} | Album: {self.favorites[i]['Album']}",command=partial(self.queueSong, self.favorites[i]["id"]), bg="black", activebackground="grey", fg="white"))
+                self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.favorites[i]['Title']} | Artist: {self.favorites[i]['Artist']} | Album: {self.favorites[i]['Album']}",command=partial(self.queueSong, self.favorites[i]["id"]), bg="white", activebackground="grey", fg="black"))
                 if (i < len(self.favorites)-1): self.text.insert("end","\n")
         else:
             self.loadSongsIntoFrame() 

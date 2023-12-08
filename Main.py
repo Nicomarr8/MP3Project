@@ -34,16 +34,6 @@ from PIL import ImageTk,Image
   # Save the updated settings
   #save_settings(current_settings)
 
-new_directory = "MP3_App"
-home_directory = os.path.expanduser ("~")
-music_directory = os.path.join(home_directory, "Music")
-
-music_directory_path = os.path.join(music_directory, new_directory)
-#initialize it to 0 
-
-if not os.path.exists(music_directory_path): 
-    os.makedirs(music_directory_path)
-
 class Window(tkinter.Tk):
     def __init__(self):
         super().__init__()
@@ -54,7 +44,6 @@ class Window(tkinter.Tk):
         self.buttons = {}
         self.canvases = {}
         self.frames = {}
-        self.directory = music_directory_path
         self.songs = []
         self.songButtons = []
         self.idCounter = 0
@@ -62,6 +51,33 @@ class Window(tkinter.Tk):
         self.currentSong = 0
         self.favorites_mode = False
         self.loop = False
+
+        new_directory = "MP3_App"
+        home_directory = os.path.expanduser ("~")
+        music_directory = os.path.join(home_directory, "Music")
+
+        music_directory_path = os.path.join(music_directory, new_directory)
+        self.directory = music_directory_path
+        #initialize it to 0 
+
+        if not os.path.exists(music_directory_path): 
+            os.makedirs(music_directory_path)
+
+        file_name = "SongDirectory.txt"
+        text_directory = os.path.join(music_directory_path, file_name)
+
+        # Check if the file exists in the directory
+        if os.path.exists(text_directory) and os.path.isfile(text_directory):
+            # Read the content of the file to determine the new directory
+            with open(text_directory, 'r') as text:
+                self.directory = text.read().strip()  # Store the content in 'self.directory'
+        else:
+            # If the file doesn't exist, set 'self.directory' to 'music_directory_path'
+            self.directory = music_directory_path
+            # Create a new SongDirectory.txt file and write 'self.directory' to it
+            with open(text_directory, 'w') as text:
+                text.write(self.directory)
+                text.close()
 
         # default settings dictionary
         self.DEFAULT_SETTINGS = {
@@ -106,15 +122,17 @@ class Window(tkinter.Tk):
         self.website = self.current_settings["about_info"]["website"]
 
         #frames
-        self.frames["left"] = tkinter.Frame(self,bg = "white")
-        self.frames["right"] = tkinter.Frame(self)
-        self.frames["down"] = tkinter.Frame(self,bg = "#7aa7f0")
+        self.frames["left"] = tkinter.Frame(self,bg = "#aaaaaa")
+        self.frames["right"] = tkinter.Frame(self,bg = "#aaaaaa")
+        self.frames["down"] = tkinter.Frame(self,bg = "#5a87d0")
 
         #stylize the scrollbar with witchcraft and wizardry
         style=ttk.Style()
         style.theme_use('classic')
         style.configure("Vertical.TScrollbar", background="grey", bordercolor="black", arrowcolor="white")
-
+        self.scrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
+        self.text = tkinter.Text(self.frames["right"],yscrollcommand=self.scrollbar.set,bg = "#aaaaaa")
+        self.scrollbar.config(command=self.text.yview)
         #album default icon
         self.canvasAlbum = tkinter.Canvas(self.frames["left"],background="grey")
         self.genAlbumIcon(2)
@@ -170,10 +188,19 @@ class Window(tkinter.Tk):
             self.directory = filedialog.askdirectory() 
             self.removeButtons()          
             self.refresh() 
+
+            if os.path.exists(text_directory) and os.path.isfile(text_directory):
+                # Clear the content of the file and write the new string
+                with open(text_directory, 'w') as text:
+                    text.write(self.directory)
+            else:
+                # If the file doesn't exist, create a new file and write the string
+                with open(text_directory, 'w') as text:
+                    text.write(self.directory)
+
             self.ListboxRemoveOldSongs()
             self.loadSongs()
 
-            self.songScrollbar.update()
             self.ListboxHighlightPlaying()
             #self.Queue_listbox.selection_clear(0,tkinter.END)
             #self.currentSong = 0
@@ -318,7 +345,7 @@ class Window(tkinter.Tk):
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
                 self.loadSongsIntoFrame()
-                self.queueSong(self.songs[0]["id"])              
+                if self.songs: self.queueSong(self.songs[0]["id"])              
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
@@ -334,20 +361,13 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            button_text = f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}"
-            songButton = tkinter.Button(self.frames["innerRight"], text=button_text, command=partial(self.queueSong, self.songs[i]["id"]), bg="black", activebackground="grey", fg="white")
-            songButton.grid(row=i, column=0)
-            self.songButtons.append(songButton)
+            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="white", activebackground="grey", fg="black"))
+            if (i < len(self.songs)-1): self.text.insert("end","\n")
+
         #self.songs = [song for song in self.songs if song in self.favorites]
 
     def removeButtons(self):
-        self.songCanvas.delete("all")
-        self.songScrollbar.destroy()
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
-        self.songCanvas.config(yscrollcommand = self.songScrollbar.set) 
-        #self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
+        self.text.delete(1.0,"end")
         # self.songButtons = []
         # pass
 
@@ -394,15 +414,6 @@ class Window(tkinter.Tk):
         except FileNotFoundError:
             settings = self.DEFAULT_SETTINGS
         return settings
-    
-    def genScrollBar(self):
-        # Creating a scro1lbar
-        self.songScrollbar = ttk.Scrollbar(self.frames["right"], orient="vertical")
-        self.songCanvas = tkinter.Canvas(self.frames["right"], yscrollcommand=self.songScrollbar.set,bg = "#333333")
-        self.songScrollbar.config(command=self.songCanvas.yview)
-        self.songCanvas.bind('<Configure>',lambda e: self.songCanvas.configure(scrollregion=self.songCanvas.bbox("all")))
-        self.frames["innerRight"] = tkinter.Frame(self.songCanvas)
-        self.songCanvas.create_window((0,0),window=self.frames["innerRight"],anchor="nw")
 
     # Save settings to the JSON file
     def save_settings(self,settings):
@@ -437,8 +448,6 @@ class Window(tkinter.Tk):
         for i in range(len(self.frames)):
             self.frames[list(self.frames)[i]].grid_remove()
 
-        self.genScrollBar()
-
         #frames
         for i in range(8):
             self.rowconfigure(i,weight=1, uniform='row')
@@ -455,18 +464,14 @@ class Window(tkinter.Tk):
         self.frames["right"].grid_rowconfigure(0, weight=1)
         self.frames["right"].grid_columnconfigure(0, weight=1)
         self.frames["down"].grid(row=5, column=0, rowspan=3,columnspan=2, padx=0, pady=1, sticky="nsew")
-        self.songCanvas.grid(row=0,column=0,sticky="nsew")
-        self.songCanvas.grid_rowconfigure(0,weight=1)
-        self.songCanvas.grid_columnconfigure(0,weight=1)
         
         for i in range(7):
             self.frames["down"].grid_columnconfigure(i, weight=1,uniform="column")
         for i in range(6):
             self.frames["down"].grid_rowconfigure(i, weight=1)
 
-        
-        #scrollbar
-        self.songScrollbar.grid(row=0, column=1, sticky="nsew")
+        self.text.grid(row=0,column=0,sticky="nsew",pady=(0,20))
+        self.scrollbar.grid(row=0,column=1,sticky="nsew")
 
         #tag info
         self.tagInfo.grid(row=0,column=0,columnspan=7, sticky="nsew")
@@ -623,6 +628,9 @@ class Window(tkinter.Tk):
 
     #this is the function for the next and previous buttons
     def moveSong(self,direction):
+        if self.loop:
+            self.queueSong(self.songQueued["id"])
+            return
         currentSong = self.songQueued
         for index, song in enumerate(self.songs):
             if song["id"]== currentSong["id"]:
@@ -633,7 +641,7 @@ class Window(tkinter.Tk):
                 self.queueSong(self.songs[len(self.songs)-1]["id"])
             else:
                 self.queueSong(self.songs[index-1]["id"])
-        if direction == 1:
+        elif direction == 1:
             if index == len(self.songs)-1:
                 self.queueSong(self.songs[0]["id"])
             else:
@@ -1159,11 +1167,9 @@ class Window(tkinter.Tk):
         # Populate the list with liked songs
         if self.favorites_mode:
         
-            for song in self.favorites:  # Make sure to iterate over liked_songs, not favorite
-                song_info = f"Title: {song['Title']} | Artist: {song['Artist']} | Album: {song['Album']}"
-                songButton = tkinter.Button(self.frames["innerRight"], command=partial(self.queueSong, song ["id"]), text=song_info, bg="black", fg="white")
-                songButton.grid(row=len(self.songButtons), column=0)
-                self.songButtons.append(songButton)
+            for i in range(len(self.favorites)):
+                self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.favorites[i]['Title']} | Artist: {self.favorites[i]['Artist']} | Album: {self.favorites[i]['Album']}",command=partial(self.queueSong, self.favorites[i]["id"]), bg="white", activebackground="grey", fg="black"))
+                if (i < len(self.favorites)-1): self.text.insert("end","\n")
         else:
             self.loadSongsIntoFrame() 
             

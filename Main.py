@@ -1,38 +1,8 @@
-# todo
-# add a textbox for the song info above the seek bar
-# investigate the mixer channel stuff to see if it can do crossfade
-# click on seek to move it to that position
-# optimization?
-# finding its own directory
-
 import time, tkinter, json, eyed3, pygame, os, threading, random
 from tkinter import ttk
 from tkinter import filedialog
 from functools import partial
 from PIL import ImageTk,Image
-
-# def testChangeSettings():
-#   # Changing settings
-#   new_settings = {
-#       "visual_theme": "dark",
-#       "audio_settings": {
-#           "volume": 75,
-#           "equalizer": {
-#               "bass": 2,
-#               "treble": -1
-#           }
-#       },
-#       "preferences": {
-#           "language": "French",
-#           "notifications": False
-#       }
-#   }
-
-  # Apply the new settings
-  #change_settings(new_settings)
-
-  # Save the updated settings
-  #save_settings(current_settings)
 
 class Window(tkinter.Tk):
     def __init__(self):
@@ -52,17 +22,19 @@ class Window(tkinter.Tk):
         self.favorites_mode = False
         self.loop = False
 
+        #Creates a path to the user's local Music directory
         new_directory = "MP3_App"
         home_directory = os.path.expanduser ("~")
         music_directory = os.path.join(home_directory, "Music")
 
         music_directory_path = os.path.join(music_directory, new_directory)
         self.directory = music_directory_path
-        #initialize it to 0 
 
+        #Creates a folder in the Windows music directory
         if not os.path.exists(music_directory_path): 
             os.makedirs(music_directory_path)
 
+        #Creates a text file to track the default directory
         file_name = "SongDirectory.txt"
         text_directory = os.path.join(music_directory_path, file_name)
 
@@ -70,7 +42,11 @@ class Window(tkinter.Tk):
         if os.path.exists(text_directory) and os.path.isfile(text_directory):
             # Read the content of the file to determine the new directory
             with open(text_directory, 'r') as text:
-                self.directory = text.read().strip()  # Store the content in 'self.directory'
+                TrackDirectory = text.read().strip()
+                if (os.path.exists(TrackDirectory)):
+                    self.directory = TrackDirectory
+                else:
+                    self.directory = music_directory_path
         else:
             # If the file doesn't exist, set 'self.directory' to 'music_directory_path'
             self.directory = music_directory_path
@@ -169,6 +145,7 @@ class Window(tkinter.Tk):
         self.protocol("WM_DELETE_WINDOW",self.tidyDestroy)
         self.mixer.init()    
         self.shuffle_dict = {}
+
         # Volume slider
         self.volume= tkinter.Scale(self.frames["down"], from_=0, to =100, orient="horizontal", command=self.setVolume, label="Volume")
         self.volume.set(50)
@@ -262,8 +239,10 @@ class Window(tkinter.Tk):
         
             
     def updateSongButtons(self):
-        for i in range(len(self.songButtons)):
-            self.songButtons[i].grid_forget()  # Remove the existing button
+        self.removeButtons()
+        # for i in range(len(self.songButtons)):
+        #     self.songButtons[i].grid.forget()
+        #     self.songButtons[i].destroy()  # Remove the existing button
         self.songButtons.clear()
         self.loadSongsIntoFrame()        
 
@@ -344,13 +323,13 @@ class Window(tkinter.Tk):
                         self.songs.append({"id":self.idCounter,"Title":trackTitle,"Artist":trackArtist,"Album":trackAlbum,"Release":trackRD,"Image":trackImage,"Directory":self.directory+"//"+i,"Length":mp3.info.time_secs})
                         # print(mp3.info.time_secs, end = " | ")
                         self.idCounter += 1
-                self.loadSongsIntoFrame()
+                self.updateSongButtons()
                 if self.songs: self.queueSong(self.songs[0]["id"])              
         else:
             #needs error handling eventually
             print("File doesn't exist \n")
         # Load songs into the right frame without shuffling
-        self.loadSongsIntoFrame()
+        #self.loadSongsIntoFrame()
 
         # Queue the first song
         if self.songs:
@@ -361,14 +340,23 @@ class Window(tkinter.Tk):
     #loads songs into the right frame tkinter frame
     def loadSongsIntoFrame(self):
         for i in range(len(self.songs)):
-            self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="white", activebackground="grey", fg="black"))
-            if (i < len(self.songs)-1): self.text.insert("end","\n")
+            # self.text.window_create("end",window=tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}",command=partial(self.queueSong, self.songs[i]["id"]), bg="white", activebackground="grey", fg="black"))
+            # if (i < len(self.songs)-1): self.text.insert("end","\n")
+            # self.songButtons.append(songbutton)
+            button = tkinter.Button(text=f"Title: {self.songs[i]['Title']} | Artist: {self.songs[i]['Artist']} | Album: {self.songs[i]['Album']}", command=partial(self.queueSong, self.songs[i]["id"]), bg="white", activebackground="grey", fg="black")
+            self.text.window_create("end", window=button)
+            if (i < len(self.songs) - 1):
+                self.text.insert("end", "\n")
+        
+            # Append the button to the songButtons array
+            self.songButtons.append(button)
+
 
         #self.songs = [song for song in self.songs if song in self.favorites]
 
     def removeButtons(self):
         self.text.delete(1.0,"end")
-        # self.songButtons = []
+        self.songButtons = []
         # pass
 
     #queues and plays the selected song
@@ -685,60 +673,6 @@ class Window(tkinter.Tk):
           #  self.Queue_listbox.selection_clear(0,tkinter.END)
             #self.currentSong += 1
           #  self.Queue_listbox.selection_set(self.currentSong)
-
-    #Favorites
-        # self.favorites = []
-        # self.load_favorites()
-
-        # # A variable to keep track of which playlist is currently displayed
-        # self.showing_favorites = False
-        #     # Add a separate "Favorites" button in your init method
-        # fav_button = tkinter.Button(self.frames["down"], text="Favorites", command=self.show_favorites, bg="black", activebackground="grey", fg="white")
-        # fav_button.grid(row=5, column=2)
-
-        # def show_favorites(self):
-        #     if self.showing_favorites:
-        #         # Display the "All Songs" playlist
-        #         self.load_songs()
-        #         self.refresh()
-        #         self.showing_favorites = False
-        #     else:
-        #         # Display the "Favorites" playlist
-        #         self.load_favorites()
-        #         self.refresh()
-        #         self.showing_favorites = True
-
-        # # Define the toggle_favorite method to add/remove songs to/from favorites
-        # def toggle_favorite(self, track_id):
-        #     if track_id in self.favorites:
-        #         self.favorites.remove(track_id)
-        #     else:
-        #         self.favorites.append(track_id)
-            
-        #     # Save favorites to settings
-        #     self.save_favorites()
-
-
-        # Define the update_favorites_playlist method to populate the playlist based on favorites
-        def update_favorites_playlist(self):
-            self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-            self.refresh()
-            
-        # # Correctly define load_songs method to load all songs
-        # def load_songs(self):
-        #     self.songs = self.all_songs
-        #     self.refresh()
-
-        # # Correctly define load_favorites method to load favorite songs
-        # def load_favorites(self):
-        #     self.songs = [song for song in self.all_songs if song["id"] in self.favorites]
-        #     self.refresh()
-
-        # # Initialize a variable to track which playlist is currently displayed
-        # self.showing_favorites = False
-
-        # # Load all songs initially
-        # self.load_songs()
 
     def createListbox(self):
         self.listbox_scrollbar = tkinter.Scrollbar(self.frames["down"],orient = "vertical")
@@ -1172,6 +1106,29 @@ class Window(tkinter.Tk):
                 if (i < len(self.favorites)-1): self.text.insert("end","\n")
         else:
             self.loadSongsIntoFrame() 
+
+# def testChangeSettings():
+#   # Changing settings
+#   new_settings = {
+#       "visual_theme": "dark",
+#       "audio_settings": {
+#           "volume": 75,
+#           "equalizer": {
+#               "bass": 2,
+#               "treble": -1
+#           }
+#       },
+#       "preferences": {
+#           "language": "French",
+#           "notifications": False
+#       }
+#   }
+
+  # Apply the new settings
+  #change_settings(new_settings)
+
+  # Save the updated settings
+  #save_settings(current_settings)
             
 # this runs the whole file
 Window().mainloop()
